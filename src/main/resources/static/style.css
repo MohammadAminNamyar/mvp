@@ -217,9 +217,20 @@ a {
 
 .grid th.vertical-team {
     width: 36px;
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    letter-spacing: 2px;
+    padding: 0;
+    writing-mode: initial;
+    text-orientation: initial;
+    letter-spacing: 1px;
+}
+
+.grid th.vertical-team > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    transform: rotate(-90deg);
+    white-space: nowrap;
 }
 
 .grid th.row-digit-corner {

@@ -141,7 +141,9 @@
         const verticalTeam = document.createElement('th');
         verticalTeam.className = 'team-header vertical-team';
         verticalTeam.rowSpan = 11;
-        verticalTeam.textContent = snapshot.awayTeam;
+        const verticalLabel = document.createElement('span');
+        verticalLabel.textContent = snapshot.awayTeam;
+        verticalTeam.appendChild(verticalLabel);
         headerRow.appendChild(verticalTeam);
 
         const corner = document.createElement('th');
