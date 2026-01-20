@@ -154,8 +154,8 @@
         for (let row = 0; row < 10; row++) {
             const tr = document.createElement('tr');
             const rowHeader = document.createElement('th');
-            rowHeader.className = 'team-header';
-            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : snapshot.awayTeam;
+            rowHeader.className = snapshot.digitsRevealed ? 'digit-header row-header' : 'team-header row-header';
+            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : '';
             tr.appendChild(rowHeader);
 
             for (let col = 0; col < 10; col++) {

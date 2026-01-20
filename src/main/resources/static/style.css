@@ -220,6 +220,11 @@ a {
     color: #facc15;
 }
 
+.grid th.row-header {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
 .square.empty {
     cursor: pointer;
     background: rgba(10, 12, 20, 0.6);
