@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Squares Pool Login</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="theme-dark">
+<div class="app-shell">
+    <header class="top-nav">
+        <div class="brand">
+            <span class="logo">■</span>
+            <div>
+                <div class="brand-title">Squares Pool</div>
+                <div class="brand-subtitle">Login</div>
+            </div>
+        </div>
+        <nav class="nav-actions">
+            <a class="nav-link" href="/">Back to Lobby</a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="login-card card">
+            <h1>Access the MVP</h1>
+            <p class="muted">This is a placeholder login screen so we can capture a display name.</p>
+            <div class="idm-label">This is supposed to use IDM</div>
+            <form id="login-form" class="login-form">
+                <label class="field">
+                    <span>Display name</span>
+                    <input type="text" id="login-username" placeholder="Jane Doe" required />
+                </label>
+                <label class="field">
+                    <span>Access code</span>
+                    <input type="number" id="login-code" placeholder="Any number" required />
+                </label>
+                <button type="submit" class="primary-btn">Continue</button>
+                <div class="notice" id="login-message"></div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<script src="/login.js"></script>
+</body>
+</html>
