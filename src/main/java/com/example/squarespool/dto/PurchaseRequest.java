@@ -12,6 +12,7 @@ public class PurchaseRequest {
     private String customerName;
     @NotEmpty
     private List<Integer> indices;
+    private String serviceTicket;
 
     public String getSessionId() {
         return sessionId;
@@ -35,5 +36,13 @@ public class PurchaseRequest {
 
     public void setIndices(List<Integer> indices) {
         this.indices = indices;
+    }
+
+    public String getServiceTicket() {
+        return serviceTicket;
+    }
+
+    public void setServiceTicket(String serviceTicket) {
+        this.serviceTicket = serviceTicket;
     }
 }

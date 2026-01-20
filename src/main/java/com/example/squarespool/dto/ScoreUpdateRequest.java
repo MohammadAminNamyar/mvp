@@ -7,6 +7,7 @@ public class ScoreUpdateRequest {
     private int homeScore;
     @Min(0)
     private int awayScore;
+    private String gameClock;
 
     public int getHomeScore() {
         return homeScore;
@@ -22,5 +23,13 @@ public class ScoreUpdateRequest {
 
     public void setAwayScore(int awayScore) {
         this.awayScore = awayScore;
+    }
+
+    public String getGameClock() {
+        return gameClock;
+    }
+
+    public void setGameClock(String gameClock) {
+        this.gameClock = gameClock;
     }
 }

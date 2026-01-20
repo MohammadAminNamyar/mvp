@@ -65,7 +65,7 @@ public class AdminController {
                       @PathVariable Long id,
                       @Valid @RequestBody ScoreUpdateRequest request) {
         validateToken(token);
-        boardService.updateScore(id, request.getHomeScore(), request.getAwayScore());
+        boardService.updateScore(id, request.getHomeScore(), request.getAwayScore(), request.getGameClock());
     }
 
     @PostMapping("/boards/{id}/confirm-quarter")

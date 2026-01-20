@@ -8,6 +8,8 @@ public class AppProperties {
     private String adminToken = "admin";
     private boolean houseOnLock = true;
     private boolean showPurchaserNames = false;
+    private boolean authEnabled = false;
+    private String authUserHeader = "X-User-Id";
 
     public int getReservationTtlSeconds() {
         return reservationTtlSeconds;
@@ -39,5 +41,21 @@ public class AppProperties {
 
     public void setShowPurchaserNames(boolean showPurchaserNames) {
         this.showPurchaserNames = showPurchaserNames;
+    }
+
+    public boolean isAuthEnabled() {
+        return authEnabled;
+    }
+
+    public void setAuthEnabled(boolean authEnabled) {
+        this.authEnabled = authEnabled;
+    }
+
+    public String getAuthUserHeader() {
+        return authUserHeader;
+    }
+
+    public void setAuthUserHeader(String authUserHeader) {
+        this.authUserHeader = authUserHeader;
     }
 }

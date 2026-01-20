@@ -45,6 +45,7 @@ public class BoardService {
     private final TpiProperties tpiProperties;
     private final TpiClient tpiClient;
     private final SimpMessagingTemplate messagingTemplate;
+    private final TpiClient tpiClient;
 
     public BoardService(BoardRepository boardRepository,
                         SquareRepository squareRepository,
@@ -58,10 +59,18 @@ public class BoardService {
         this.tpiProperties = tpiProperties;
         this.tpiClient = tpiClient;
         this.messagingTemplate = messagingTemplate;
+        this.tpiClient = tpiClient;
     }
 
     @Transactional
     public Board createBoard(CreateBoardRequest request) {
+        int payoutSum = request.getPayoutQ1Percent()
+                + request.getPayoutQ2Percent()
+                + request.getPayoutQ3Percent()
+                + request.getPayoutQ4Percent();
+        if (payoutSum != 100) {
+            throw new IllegalStateException("Payout percentages must total 100");
+        }
         Board board = new Board();
         board.setName(request.getName());
         board.setHomeTeam(request.getHomeTeam());
@@ -69,6 +78,10 @@ public class BoardService {
         board.setPriceCents(request.getPriceCents());
         board.setHousePercent(request.getHousePercent());
         board.setMinSquaresToActivate(request.getMinSquaresToActivate());
+        board.setPayoutQ1Percent(request.getPayoutQ1Percent());
+        board.setPayoutQ2Percent(request.getPayoutQ2Percent());
+        board.setPayoutQ3Percent(request.getPayoutQ3Percent());
+        board.setPayoutQ4Percent(request.getPayoutQ4Percent());
         Board saved = boardRepository.save(board);
 
         List<Square> squares = new ArrayList<>();
@@ -136,6 +149,7 @@ public class BoardService {
         if (EnumSet.of(BoardStatus.STARTED, BoardStatus.FINISHED).contains(board.getStatus())) {
             throw new IllegalStateException("Board is locked");
         }
+        TpiCustomer customer = tpiClient.resolveCustomer(request.getServiceTicket(), request.getCustomerName());
         Instant now = Instant.now();
         List<Square> squares = request.getIndices().stream()
                 .map(idx -> loadSquare(boardId, idx))
@@ -164,7 +178,7 @@ public class BoardService {
         }
         for (Square square : squares) {
             square.setStatus(SquareStatus.TAKEN);
-            square.setOwnerName(request.getCustomerName());
+            square.setOwnerName(customer.getDisplayName());
             square.setReservedBySessionId(null);
             square.setReservedUntil(null);
         }
@@ -206,6 +220,16 @@ public class BoardService {
         Board board = loadBoard(boardId);
         board.setHomeScore(homeScore);
         board.setAwayScore(awayScore);
+        boardRepository.save(board);
+        broadcastSnapshot(boardId);
+    }
+
+    @Transactional
+    public void updateScore(Long boardId, int homeScore, int awayScore, String gameClock) {
+        Board board = loadBoard(boardId);
+        board.setHomeScore(homeScore);
+        board.setAwayScore(awayScore);
+        board.setGameClock(gameClock);
         boardRepository.save(board);
         broadcastSnapshot(boardId);
     }
@@ -356,14 +380,20 @@ public class BoardService {
         snapshot.setPriceCents(board.getPriceCents());
         snapshot.setHousePercent(board.getHousePercent());
         snapshot.setMinSquaresToActivate(board.getMinSquaresToActivate());
+        snapshot.setPayoutQ1Percent(board.getPayoutQ1Percent());
+        snapshot.setPayoutQ2Percent(board.getPayoutQ2Percent());
+        snapshot.setPayoutQ3Percent(board.getPayoutQ3Percent());
+        snapshot.setPayoutQ4Percent(board.getPayoutQ4Percent());
         snapshot.setStatus(board.getStatus());
         snapshot.setHomeScore(board.getHomeScore());
         snapshot.setAwayScore(board.getAwayScore());
+        snapshot.setGameClock(board.getGameClock());
         snapshot.setCurrentQuarter(board.getCurrentQuarter());
         snapshot.setConfirmedQuarters(board.getConfirmedQuarters());
         int purchasedCount = (int) squares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
         snapshot.setPurchasedCount(purchasedCount);
         snapshot.setActive(purchasedCount >= board.getMinSquaresToActivate());
+        applyPrizeBreakdown(snapshot, board, purchasedCount);
         boolean revealDigits = board.getStatus() != BoardStatus.OPEN;
         snapshot.setDigitsRevealed(revealDigits);
         if (revealDigits) {
@@ -378,6 +408,31 @@ public class BoardService {
         }
         snapshot.setSquares(squares.stream().map(this::toSquareSnapshot).toList());
         return snapshot;
+    }
+
+    private void applyPrizeBreakdown(BoardSnapshot snapshot, Board board, int purchasedCount) {
+        long totalCents = (long) purchasedCount * board.getPriceCents();
+        long houseCut = Math.round(totalCents * (board.getHousePercent() / 100.0));
+        long pool = Math.max(0L, totalCents - houseCut);
+        int q1 = percentOf(pool, board.getPayoutQ1Percent());
+        int q2 = percentOf(pool, board.getPayoutQ2Percent());
+        int q3 = percentOf(pool, board.getPayoutQ3Percent());
+        int q4 = percentOf(pool, board.getPayoutQ4Percent());
+        int sum = q1 + q2 + q3 + q4;
+        int remainder = (int) Math.max(0L, pool - sum);
+        q4 += remainder;
+        snapshot.setPrizePoolCents((int) pool);
+        snapshot.setPrizeQ1Cents(q1);
+        snapshot.setPrizeQ2Cents(q2);
+        snapshot.setPrizeQ3Cents(q3);
+        snapshot.setPrizeQ4Cents(q4);
+    }
+
+    private int percentOf(long total, int percent) {
+        if (total <= 0 || percent <= 0) {
+            return 0;
+        }
+        return (int) Math.round(total * (percent / 100.0));
     }
 
     private SquareSnapshot toSquareSnapshot(Square square) {
