@@ -20,7 +20,7 @@ public class ViewController {
         return "index";
     }
 
-    @GetMapping("/boards/{id}")
+    @GetMapping("/boards/{id}/view")
     public String board(@PathVariable Long id, Model model) {
         model.addAttribute("boardId", id);
         return "board";

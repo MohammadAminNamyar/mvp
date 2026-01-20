@@ -16,7 +16,7 @@
     <ul>
         <li th:if="${#lists.isEmpty(boards)}">No boards yet. Create one in Admin.</li>
         <li th:each="board : ${boards}">
-            <a th:href="@{/boards/{id}(id=${board.id})}" th:text="${board.name}">Board</a>
+            <a th:href="@{/boards/{id}/view(id=${board.id})}" th:text="${board.name}">Board</a>
             (<span th:text="${board.homeTeam}">Home</span> vs <span th:text="${board.awayTeam}">Away</span>)
         </li>
     </ul>
