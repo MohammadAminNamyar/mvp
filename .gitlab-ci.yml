@@ -1,0 +1,14 @@
+---
+include:
+  - project: firefly/infra/ci-scripts
+    ref: master
+    file:
+      - /build/java/springboot-maven.yml
+      - /build/docker/playbook.yml
+
+variables:
+  OS: rocky8
+  SKIP_TESTS: "true"
+  SKIP_SONAR: "true"
+  APPLICATION_NAME: square-game
+  MAVEN_IMAGE_TAG: jdk-17
