@@ -5,6 +5,7 @@ import com.example.squarespool.dto.BoardSnapshot;
 import com.example.squarespool.dto.CreateBoardRequest;
 import com.example.squarespool.dto.PurchaseRequest;
 import com.example.squarespool.dto.SquareSnapshot;
+import com.example.squarespool.config.TpiProperties;
 import com.example.squarespool.model.Board;
 import com.example.squarespool.model.BoardStatus;
 import com.example.squarespool.model.Quarter;
@@ -12,6 +13,12 @@ import com.example.squarespool.model.Square;
 import com.example.squarespool.model.SquareStatus;
 import com.example.squarespool.repository.BoardRepository;
 import com.example.squarespool.repository.SquareRepository;
+import com.example.squarespool.tpi.TpiClient;
+import com.example.squarespool.tpi.dto.DebitRequest;
+import com.example.squarespool.tpi.dto.DebitResponse;
+import com.example.squarespool.tpi.dto.MoneyAmount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,22 +33,30 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
+    private static final Logger log = LoggerFactory.getLogger(BoardService.class);
     private final BoardRepository boardRepository;
     private final SquareRepository squareRepository;
     private final AppProperties appProperties;
+    private final TpiProperties tpiProperties;
+    private final TpiClient tpiClient;
     private final SimpMessagingTemplate messagingTemplate;
 
     public BoardService(BoardRepository boardRepository,
                         SquareRepository squareRepository,
                         AppProperties appProperties,
+                        TpiProperties tpiProperties,
+                        TpiClient tpiClient,
                         SimpMessagingTemplate messagingTemplate) {
         this.boardRepository = boardRepository;
         this.squareRepository = squareRepository;
         this.appProperties = appProperties;
+        this.tpiProperties = tpiProperties;
+        this.tpiClient = tpiClient;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -135,6 +150,17 @@ public class BoardService {
             if (square.getReservedUntil() != null && square.getReservedUntil().isBefore(now)) {
                 throw new IllegalStateException("Reservation expired");
             }
+        }
+        long totalCents = board.getPriceCents() * (long) squares.size();
+        log.info("TPI debit start board={} session={} squares={} amountCents={}", boardId, request.getSessionId(), request.getIndices(), totalCents);
+        DebitResponse debitResponse = tpiClient.debit(buildDebitRequest(board, request, totalCents));
+        log.info("TPI debit response board={} session={} code={} balance={}", boardId, request.getSessionId(), debitResponse.getResponseCode(), debitResponse.getAleaAccountBalance() != null ? debitResponse.getAleaAccountBalance().getValue() : null);
+        if (debitResponse.getResponseCode() != null && debitResponse.getResponseCode() != 0) {
+            String message = debitResponse.getResponseMessage() != null
+                    ? debitResponse.getResponseMessage()
+                    : "Payment declined";
+            log.warn("TPI debit declined board={} session={} code={} message={}", boardId, request.getSessionId(), debitResponse.getResponseCode(), message);
+            throw new IllegalStateException(message);
         }
         for (Square square : squares) {
             square.setStatus(SquareStatus.TAKEN);
@@ -377,5 +403,18 @@ public class BoardService {
     public void broadcastSnapshot(Long boardId) {
         BoardSnapshot snapshot = getSnapshot(boardId);
         messagingTemplate.convertAndSend("/topic/boards/" + boardId + "/snapshot", snapshot);
+    }
+
+    private DebitRequest buildDebitRequest(Board board, PurchaseRequest request, long amountCents) {
+        DebitRequest debitRequest = new DebitRequest();
+        debitRequest.setThirdPartyTransactionTypeId(tpiProperties.getThirdPartyTransactionTypeId());
+        debitRequest.setThirdPartyTransactionId(UUID.randomUUID().toString());
+        debitRequest.setThirdPartyRoundId(String.valueOf(board.getId()));
+        debitRequest.setCustomerId(request.getSessionId());
+        debitRequest.setGameTypeId(tpiProperties.getGameTypeId());
+        debitRequest.setGameTypeVariationId(tpiProperties.getGameTypeVariationId());
+        debitRequest.setAmount(new MoneyAmount(tpiProperties.getCurrency(), amountCents));
+        debitRequest.setRoundToBeClosed(tpiProperties.isRoundToBeClosed());
+        return debitRequest;
     }
 }
