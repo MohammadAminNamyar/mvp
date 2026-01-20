@@ -21,6 +21,10 @@ squares:
   adminToken: admin
   houseOnLock: true
   showPurchaserNames: false
+  betAmounts:
+    - 2
+    - 5
+    - 10
 
 logging:
   level:

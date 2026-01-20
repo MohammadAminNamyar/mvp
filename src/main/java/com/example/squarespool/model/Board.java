@@ -29,6 +29,9 @@ public class Board {
     private String name;
     private String homeTeam;
     private String awayTeam;
+    private String sportType;
+    private String gameName;
+    private int boardNumber;
     private int priceCents;
     private int housePercent;
     private int minSquaresToActivate;
@@ -89,6 +92,30 @@ public class Board {
 
     public void setPriceCents(int priceCents) {
         this.priceCents = priceCents;
+    }
+
+    public String getSportType() {
+        return sportType;
+    }
+
+    public void setSportType(String sportType) {
+        this.sportType = sportType;
+    }
+
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
+    }
+
+    public int getBoardNumber() {
+        return boardNumber;
+    }
+
+    public void setBoardNumber(int boardNumber) {
+        this.boardNumber = boardNumber;
     }
 
     public int getHousePercent() {
