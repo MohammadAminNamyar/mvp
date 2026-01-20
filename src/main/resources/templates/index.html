@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Squares Pool</title>
+    <title>Squares Pools Lobby</title>
     <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="theme-dark">
@@ -12,7 +12,7 @@
             <span class="logo">■</span>
             <div>
                 <div class="brand-title">Squares Pool</div>
-                <div class="brand-subtitle">MVP Lobby</div>
+                <div class="brand-subtitle">Squares Pools Lobby</div>
             </div>
         </div>
         <nav class="nav-actions">
@@ -25,25 +25,43 @@
         <section class="hero-card">
             <div class="hero-heading">
                 <div>
-                    <h1>Squares Pool MVP</h1>
-                    <p class="muted">Open a board to purchase squares and track winners in real time.</p>
+                    <h1>Squares Pools Lobby</h1>
+                    <p class="muted">Pick a sport, choose a matchup, and grab a board at your preferred bet.</p>
+                </div>
+                <div class="pill-stack">
+                    <span class="status-pill">Live boards</span>
+                    <span class="status-pill">Real-time updates</span>
+                    <span class="status-pill">Secure squares</span>
                 </div>
             </div>
         </section>
 
-        <div class="card">
-            <h2>Boards</h2>
-            <ul>
-                <li th:if="${#lists.isEmpty(boards)}">No boards yet. Create one in Admin.</li>
-                <li th:each="board : ${boards}">
-                    <a th:href="@{/boards/{id}/view(id=${board.id})}" th:text="${board.name}">Board</a>
-                    (<span th:text="${board.homeTeam}">Home</span> vs <span th:text="${board.awayTeam}">Away</span>)
-                </li>
-            </ul>
-        </div>
+        <section class="card">
+            <h2>Select a Sport Type</h2>
+            <div id="sport-list" class="chip-list"></div>
+        </section>
 
-        <p class="notice">Use the admin page to start the game, lock boards, and confirm quarters.</p>
+        <section class="card">
+            <div class="game-section-header">
+                <div>
+                    <h2>Available Games</h2>
+                    <p class="muted small">Choose a bet amount to see boards for each matchup.</p>
+                </div>
+            </div>
+            <p id="games-empty" class="notice"></p>
+            <div id="games-list" class="game-list"></div>
+
+            <details class="terms-card">
+                <summary>Terms and Conditions</summary>
+                <div class="terms-body">
+                    <p class="muted small">By purchasing squares, you agree to the house rules for this Squares Pool. All entries are final once confirmed. Boards lock at kickoff or when filled, and digits are revealed after lock. Payouts are based on confirmed quarter scores and recorded in the admin console. If a game is postponed or canceled, the board will be reset or refunded at the administrator's discretion.</p>
+                    <p class="muted small">Participants must be 18 years or older and agree to play responsibly. The house reserve and minimum squares required to activate a board are shown on each board view.</p>
+                </div>
+            </details>
+        </section>
     </main>
 </div>
+
+<script src="/lobby.js"></script>
 </body>
 </html>

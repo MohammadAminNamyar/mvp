@@ -10,6 +10,8 @@ public class CreateBoardRequest {
     private String homeTeam;
     @NotBlank
     private String awayTeam;
+    private String sportType;
+    private String gameName;
     @Min(1)
     private int priceCents = 500;
     @Min(0)
@@ -39,6 +41,22 @@ public class CreateBoardRequest {
 
     public void setAwayTeam(String awayTeam) {
         this.awayTeam = awayTeam;
+    }
+
+    public String getSportType() {
+        return sportType;
+    }
+
+    public void setSportType(String sportType) {
+        this.sportType = sportType;
+    }
+
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
     }
 
     public int getPriceCents() {
