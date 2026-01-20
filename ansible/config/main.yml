@@ -1,0 +1,74 @@
+---
+# this configuration is used by docker-compose-app ansible playbook to deploy this application.
+# variables documentation: https://git.alea.ca/ansible/playbooks/docker-compose-app
+# always prefix your variables with the name of your application.
+
+# default application configuration
+application_name: eco-admintools
+application_servers: sds_admin_tools_servers
+application_docker_image: "{{ application_docker_registry }}/firefly/product/eco/admintools"
+application_docker_version: "{{ build_metadata.playbook_tag | default('latest') }}"
+
+# environment variables
+application_environment_variables:
+
+  # eco configuration
+  CLUSTER_NODE_NAME: "{{ eco_cluster_node_name | default(inventory_hostname_short) }}"
+  CLUSTER_MEMBERS: "{{ eco_cluster_members | default(groups[application_servers] | join(',')) }}"
+  TZ: "{{ eco_admintools_timezone | default('America/Vancouver')}}"
+  APPLICATION_LOG_PATH: "{{ application_log_path | default('/srv/eco-admintools/log') }}"
+  APPLICATION_LOG_LEVEL: "{{ application_log_level | default('INFO') }}"
+
+  # database configuration
+  DB_HOST: "{{ eco_pgbouncer_hostname | default('pgbouncer-eco.global.prv') }}"
+  DB_PORT: "{{ eco_pgbouncer_db_port | default('5432') }}"
+  DB_NAME: "{{ eco_pgbouncer_db_name | default('eco') }}"
+  DB_USERNAME: "{{ eco_db_username }}"
+  DB_PASSWORD: "{{ eco_db_password }}"
+  ##### Memory Allocation #####
+  TOMCAT_HEAP_MEMORY_MAX: "{{ tomcat_heap_memory_max | default('1024m') }}"
+  TOMCAT_HEAP_MEMORY_INITIAL: "{{ tomcat_heap_memory_initial | default('512m') }}"
+  TOMCAT_METASPACE_MEMORY_MAX: "{{ tomcat_metaspace_memory_max | default('256m') }}"
+  TOMCAT_METASPACE_MEMORY_INITIAL: "{{ tomcat_metaspace_memory_initial | default('128m') }}"
+
+  # tomcat configuration
+  ECO_APPCONFIG_TOMCAT8_URL: "{{ eco_appconfig_tomcat8_url | default('file:///opt/tomcat/conf/appconfig/ecowd/') }}"
+  ECO_EXT_RESOURCES_APPCONFIG_TOMCAT8_URL: "{{ eco_ext_resources_appconfig_tomcat8_url | default('file:///opt/tomcat/conf/appconfig/ecowd-ext-resources/') }}"
+  URLS_CAM_PUBLIC: "{{ urls_cam_public }}"
+  ##### IDM_PROPERTIES #####
+  IDM_SVC_HOST: "{{ idm_svc_host }}"
+  IDM_LOGIN_URL: "{{ idm_login_url }}"
+  IDM_LOGOUT_URL: "{{ idm_logout_url }}"
+  IDM_VALIDATE_URL: "{{ idm_validate_url | default('http://idm-centralauthn.global.prv:9006/centralauthn/validate') }}"
+  IDM_AUTHSVC_URL: "{{ idm_authsvc_url | default('http://idm-appservices.global.prv:9006/ias/authorizationsvc') }}"
+  IDM_AUTHSVC_REST_URL: "{{ idm_authsvc_rest_url | default('http://idm-appservices-rest.global.prv:9006/ias-rest') }}"
+  IDM_AUTH_COMPONENT: "{{ idm_auth_component | default(2001) }}"
+  IDM_AUTH_GROUP: "{{ idm_auth_group | default(1001) }}"
+
+  # Swagger Docs
+  ENABLE_SWAGGER: "{{ eco_admin_tools_enable_swagger | default('false') }}"
+
+  # General admintools properties
+  ECO_ADMINTOOLS_WEBAPP_NAME: "{{ eco_admintools_webapp_name | default('admintools') }}"
+  ECO_ADMINTOOLS_LOCALHESSIANSERVICEURL: "{{ eco_admintools_localhessianserviceurl | default('http://localhost:8280/eco') }}"
+
+  # IDM Access
+  ECO_ADMINTOOLS_ACCESS_COMMENTS_PLS: "{{ eco_admintools_access_comments_pls | default(2006) }}"
+  ECO_ADMINTOOLS_ACCESS_GATEWAYSTATS_ALL: "{{ eco_admintools_access_gatewaystats_all | default(2012) }}"
+
+  # Batch Customer Comments
+  ECO_ADMINTOOLS_BDEMAIL_FROM: "{{ eco_admintools_bdemail_from | default('nobody@starnetc.com') }}"
+  ECO_ADMINTOOLS_BDEMAIL_MAILHOST: "{{ eco_admintools_bdemail_mailhost | default('localhost') }}"
+  ECO_ADMINTOOLS_BDEMAIL_MAILER: "{{ eco_admintools_bdemail_mailer | default('Starnet Mail') }}"
+
+# ports configuration
+app_port: 8280
+app_check_port: "{{ app_port }}"
+app_prometheus_agent_port: 8221
+
+# healthcheck configuration
+application_healthcheck_path: eco/admintools/check
+application_healthcheck_port: "{{ app_check_port }}"
+application_port_environment_variables:
+  SERVER_PORT: "{{ app_port }}"
+  PROMETHEUS_AGENT_PORT: "{{ app_prometheus_agent_port }}"
