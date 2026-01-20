@@ -9,6 +9,8 @@
 
     const adminTokenInput = document.getElementById('admin-token');
     const boardNameInput = document.getElementById('board-name');
+    const sportTypeInput = document.getElementById('sport-type');
+    const gameNameInput = document.getElementById('game-name');
     const homeTeamInput = document.getElementById('home-team');
     const awayTeamInput = document.getElementById('away-team');
     const priceCentsInput = document.getElementById('price-cents');
@@ -76,6 +78,8 @@
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
                 name: boardNameInput.value,
+                sportType: sportTypeInput.value,
+                gameName: gameNameInput.value,
                 homeTeam: homeTeamInput.value,
                 awayTeam: awayTeamInput.value,
                 priceCents: Number(priceCentsInput.value),

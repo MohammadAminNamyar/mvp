@@ -2,7 +2,6 @@ package com.example.squarespool.controller;
 
 import com.example.squarespool.service.BoardService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -15,8 +14,7 @@ public class ViewController {
     }
 
     @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("boards", boardService.listBoards());
+    public String index() {
         return "index";
     }
 

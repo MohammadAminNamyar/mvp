@@ -2,8 +2,11 @@ package com.example.squarespool.service;
 
 import com.example.squarespool.config.AppProperties;
 import com.example.squarespool.dto.BoardSnapshot;
+import com.example.squarespool.dto.BoardSummaryResponse;
 import com.example.squarespool.dto.CreateBoardRequest;
+import com.example.squarespool.dto.GameOptionResponse;
 import com.example.squarespool.dto.PurchaseRequest;
+import com.example.squarespool.dto.SportOptionResponse;
 import com.example.squarespool.dto.SquareSnapshot;
 import com.example.squarespool.model.Board;
 import com.example.squarespool.model.BoardStatus;
@@ -21,11 +24,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,30 +51,21 @@ public class BoardService {
 
     @Transactional
     public Board createBoard(CreateBoardRequest request) {
+        String sportType = normalizeSport(request.getSportType());
+        String gameName = normalizeGameName(request.getGameName(), request.getHomeTeam(), request.getAwayTeam());
+        int boardNumber = nextBoardNumber(sportType, gameName, request.getPriceCents());
+
         Board board = new Board();
         board.setName(request.getName());
         board.setHomeTeam(request.getHomeTeam());
         board.setAwayTeam(request.getAwayTeam());
+        board.setSportType(sportType);
+        board.setGameName(gameName);
+        board.setBoardNumber(boardNumber);
         board.setPriceCents(request.getPriceCents());
         board.setHousePercent(request.getHousePercent());
         board.setMinSquaresToActivate(request.getMinSquaresToActivate());
-        Board saved = boardRepository.save(board);
-
-        List<Square> squares = new ArrayList<>();
-        for (int row = 0; row < 10; row++) {
-            for (int col = 0; col < 10; col++) {
-                Square square = new Square();
-                square.setBoard(saved);
-                square.setRowIndex(row);
-                square.setColIndex(col);
-                square.setIdx(row * 10 + col);
-                square.setStatus(SquareStatus.EMPTY);
-                squares.add(square);
-            }
-        }
-        squareRepository.saveAll(squares);
-        broadcastSnapshot(saved.getId());
-        return saved;
+        return saveBoardWithSquares(board);
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +141,7 @@ public class BoardService {
 
         if (board.getStatus() == BoardStatus.OPEN && isBoardFull(boardId)) {
             lockBoard(board);
+            ensureFollowOnBoard(board);
         }
         broadcastSnapshot(boardId);
     }
@@ -283,6 +279,44 @@ public class BoardService {
         boardRepository.save(board);
     }
 
+    private void ensureFollowOnBoard(Board board) {
+        if (board.getSportType() == null || board.getGameName() == null) {
+            return;
+        }
+        int nextNumber = nextBoardNumber(board.getSportType(), board.getGameName(), board.getPriceCents());
+        Board nextBoard = new Board();
+        nextBoard.setName("Board #" + nextNumber);
+        nextBoard.setHomeTeam(board.getHomeTeam());
+        nextBoard.setAwayTeam(board.getAwayTeam());
+        nextBoard.setSportType(board.getSportType());
+        nextBoard.setGameName(board.getGameName());
+        nextBoard.setBoardNumber(nextNumber);
+        nextBoard.setPriceCents(board.getPriceCents());
+        nextBoard.setHousePercent(board.getHousePercent());
+        nextBoard.setMinSquaresToActivate(board.getMinSquaresToActivate());
+        saveBoardWithSquares(nextBoard);
+    }
+
+    private Board saveBoardWithSquares(Board board) {
+        Board saved = boardRepository.save(board);
+
+        List<Square> squares = new ArrayList<>();
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                Square square = new Square();
+                square.setBoard(saved);
+                square.setRowIndex(row);
+                square.setColIndex(col);
+                square.setIdx(row * 10 + col);
+                square.setStatus(SquareStatus.EMPTY);
+                squares.add(square);
+            }
+        }
+        squareRepository.saveAll(squares);
+        broadcastSnapshot(saved.getId());
+        return saved;
+    }
+
     private void ensureDigits(Board board) {
         if (board.getRowDigits() == null || board.getColDigits() == null) {
             board.setRowDigits(joinDigits(generateDigits()));
@@ -293,6 +327,48 @@ public class BoardService {
     private boolean isBoardFull(Long boardId) {
         List<Square> squares = squareRepository.findByBoardId(boardId);
         return squares.stream().noneMatch(square -> square.getStatus() == SquareStatus.EMPTY || square.getStatus() == SquareStatus.RESERVED);
+    }
+
+    public List<SportOptionResponse> listSports() {
+        Set<String> sports = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Board board : boardRepository.findAll()) {
+            sports.add(normalizeSport(board.getSportType()));
+        }
+        return sports.stream().map(SportOptionResponse::new).toList();
+    }
+
+    public List<GameOptionResponse> listGames(String sportType) {
+        String normalizedSport = normalizeSport(sportType);
+        Map<String, GameOptionResponse> games = new LinkedHashMap<>();
+        for (Board board : boardRepository.findAll()) {
+            String boardSport = normalizeSport(board.getSportType());
+            if (!boardSport.equalsIgnoreCase(normalizedSport)) {
+                continue;
+            }
+            String gameName = normalizeGameName(board.getGameName(), board.getHomeTeam(), board.getAwayTeam());
+            games.putIfAbsent(gameName, new GameOptionResponse(gameName, board.getHomeTeam(), board.getAwayTeam()));
+        }
+        return new ArrayList<>(games.values());
+    }
+
+    public List<BoardSummaryResponse> listBoards(String sportType, String gameName, int priceCents) {
+        String normalizedSport = normalizeSport(sportType);
+        String normalizedGame = normalizeGameName(gameName, null, null);
+        List<Board> boards = boardRepository.findAll().stream()
+                .filter(board -> normalizeSport(board.getSportType()).equalsIgnoreCase(normalizedSport))
+                .filter(board -> normalizeGameName(board.getGameName(), board.getHomeTeam(), board.getAwayTeam())
+                        .equalsIgnoreCase(normalizedGame))
+                .filter(board -> board.getPriceCents() == priceCents)
+                .sorted((a, b) -> Integer.compare(a.getBoardNumber(), b.getBoardNumber()))
+                .toList();
+        List<BoardSummaryResponse> summaries = new ArrayList<>();
+        for (Board board : boards) {
+            int openSquares = (int) squareRepository.countByBoardIdAndStatus(board.getId(), SquareStatus.EMPTY);
+            boolean full = openSquares == 0;
+            String label = board.getBoardNumber() > 0 ? "Board #" + board.getBoardNumber() : board.getName();
+            summaries.add(new BoardSummaryResponse(board.getId(), label, openSquares, 100, full, board.getStatus()));
+        }
+        return summaries;
     }
 
     private Board loadBoard(Long boardId) {
@@ -377,5 +453,26 @@ public class BoardService {
     public void broadcastSnapshot(Long boardId) {
         BoardSnapshot snapshot = getSnapshot(boardId);
         messagingTemplate.convertAndSend("/topic/boards/" + boardId + "/snapshot", snapshot);
+    }
+
+    private int nextBoardNumber(String sportType, String gameName, int priceCents) {
+        return boardRepository.findMaxBoardNumber(sportType, gameName, priceCents) + 1;
+    }
+
+    private String normalizeSport(String sportType) {
+        if (sportType == null || sportType.isBlank()) {
+            return "General";
+        }
+        return sportType.trim();
+    }
+
+    private String normalizeGameName(String gameName, String homeTeam, String awayTeam) {
+        if (gameName != null && !gameName.isBlank()) {
+            return gameName.trim();
+        }
+        if (homeTeam != null && awayTeam != null) {
+            return homeTeam.trim() + " vs " + awayTeam.trim();
+        }
+        return "Matchup";
     }
 }
