@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Squares Pool</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+    <h1>Squares Pool MVP</h1>
+    <a href="/admin">Admin</a>
+</header>
+
+<div class="card">
+    <h2>Boards</h2>
+    <ul>
+        <li th:if="${#lists.isEmpty(boards)}">No boards yet. Create one in Admin.</li>
+        <li th:each="board : ${boards}">
+            <a th:href="@{/boards/{id}/view(id=${board.id})}" th:text="${board.name}">Board</a>
+            (<span th:text="${board.homeTeam}">Home</span> vs <span th:text="${board.awayTeam}">Away</span>)
+        </li>
+    </ul>
+</div>
+
+<p class="notice">Open a board to purchase squares. Use the admin page to start the game and update scores.</p>
+</body>
+</html>
