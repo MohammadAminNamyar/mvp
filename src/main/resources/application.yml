@@ -16,11 +16,17 @@ spring:
     console:
       enabled: true
 
+springdoc:
+  swagger-ui:
+    path: /tpi/rest/swagger-ui/index.html
+
 squares:
   reservationTtlSeconds: 30
   adminToken: admin
   houseOnLock: true
   showPurchaserNames: false
+  authEnabled: false
+  authUserHeader: X-User-Id
 
 logging:
   level:

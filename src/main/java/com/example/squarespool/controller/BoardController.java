@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +43,12 @@ public class BoardController {
 
     @PostMapping("/{id}/purchase")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void purchase(@PathVariable Long id, @Valid @RequestBody PurchaseRequest request) {
+    public void purchase(@PathVariable Long id,
+                         @RequestHeader(value = "X-Service-Ticket", required = false) String serviceTicket,
+                         @Valid @RequestBody PurchaseRequest request) {
+        if (request.getServiceTicket() == null || request.getServiceTicket().isBlank()) {
+            request.setServiceTicket(serviceTicket);
+        }
         boardService.purchase(id, request);
     }
 }

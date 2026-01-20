@@ -24,6 +24,28 @@
     </header>
 
     <main class="main-content">
+        <section class="scoreboard-banner">
+            <div class="scoreboard-prizes" id="scoreboard-prizes"></div>
+            <div class="scoreboard-scores">
+                <div class="scoreboard-label">Scores</div>
+                <div class="scoreboard-line">
+                    <div class="scoreboard-team-block">
+                        <img class="scoreboard-logo" id="scoreboard-away-logo" alt="Away logo" />
+                        <span id="scoreboard-away-team">Away</span>
+                    </div>
+                    <span class="scoreboard-score" id="scoreboard-away-score">0</span>
+                    <span class="scoreboard-divider">||</span>
+                    <span class="scoreboard-clock" id="scoreboard-clock">-</span>
+                    <span class="scoreboard-divider">||</span>
+                    <span class="scoreboard-score" id="scoreboard-home-score">0</span>
+                    <div class="scoreboard-team-block">
+                        <img class="scoreboard-logo" id="scoreboard-home-logo" alt="Home logo" />
+                        <span id="scoreboard-home-team">Home</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="hero-card">
             <div class="hero-heading">
                 <div>
@@ -84,6 +106,12 @@
                     <h3>Purchase History</h3>
                     <div class="muted small">Latest confirmed purchases on this board.</div>
                     <ul id="history-list" class="history-list"></ul>
+                </div>
+
+                <div class="card scoreboard-card">
+                    <h3>Prize Board</h3>
+                    <div class="muted small">Live prize pool based on purchased squares.</div>
+                    <div class="grid-prizes" id="grid-prizes"></div>
                 </div>
 
                 <div class="card future-card">

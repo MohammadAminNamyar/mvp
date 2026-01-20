@@ -133,6 +133,87 @@ a {
     border-color: rgba(59, 130, 246, 0.8);
 }
 
+.scoreboard-banner {
+    background: linear-gradient(135deg, #7f1d1d, #991b1b);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: grid;
+    gap: 12px;
+    color: #fee2e2;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+
+.scoreboard-prizes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.scoreboard-prize {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.scoreboard-scores {
+    display: grid;
+    gap: 6px;
+}
+
+.scoreboard-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.scoreboard-line {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.scoreboard-score {
+    font-size: 28px;
+    color: #fef08a;
+}
+
+.scoreboard-divider {
+    opacity: 0.8;
+    letter-spacing: 2px;
+}
+
+.scoreboard-clock {
+    font-size: 18px;
+    font-weight: 600;
+    color: #86efac;
+}
+
+.scoreboard-team-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scoreboard-logo {
+    width: 36px;
+    height: 40px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
 .content-grid {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -433,9 +514,33 @@ a {
 }
 
 .square.current-winner {
-    box-shadow: 0 0 20px rgba(14, 116, 144, 0.8), inset 0 0 0 3px rgba(14, 116, 144, 0.8);
-    border-color: rgba(14, 116, 144, 0.9);
-    z-index: 2;
+    box-shadow: 0 0 24px rgba(56, 189, 248, 0.9),
+                0 0 40px rgba(34, 211, 238, 0.6),
+                inset 0 0 0 3px rgba(56, 189, 248, 0.9);
+    border-color: rgba(56, 189, 248, 0.95);
+    z-index: 3;
+    animation: winner-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes winner-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 18px rgba(56, 189, 248, 0.7),
+                    0 0 32px rgba(34, 211, 238, 0.4),
+                    inset 0 0 0 3px rgba(56, 189, 248, 0.8);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.95),
+                    0 0 54px rgba(34, 211, 238, 0.7),
+                    inset 0 0 0 3px rgba(56, 189, 248, 1);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 18px rgba(56, 189, 248, 0.7),
+                    0 0 32px rgba(34, 211, 238, 0.4),
+                    inset 0 0 0 3px rgba(56, 189, 248, 0.8);
+    }
 }
 
 .badge {
@@ -568,6 +673,40 @@ a {
     background: rgba(71, 85, 105, 0.5);
     transform: translateX(4px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.grid-prizes {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.grid-prize {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(51, 65, 85, 0.4);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.prize-period strong {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.prize-period p {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: #a9b0c7;
+}
+
+.prize-amount {
+    font-weight: 700;
+    font-size: 14px;
+    color: #38bdf8;
 }
 
 .admin-panel {

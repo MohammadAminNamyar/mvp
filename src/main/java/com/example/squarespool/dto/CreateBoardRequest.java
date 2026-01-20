@@ -16,6 +16,14 @@ public class CreateBoardRequest {
     private int housePercent = 10;
     @Min(0)
     private int minSquaresToActivate = 0;
+    @Min(0)
+    private int payoutQ1Percent = 25;
+    @Min(0)
+    private int payoutQ2Percent = 25;
+    @Min(0)
+    private int payoutQ3Percent = 25;
+    @Min(0)
+    private int payoutQ4Percent = 25;
 
     public String getName() {
         return name;
@@ -63,5 +71,37 @@ public class CreateBoardRequest {
 
     public void setMinSquaresToActivate(int minSquaresToActivate) {
         this.minSquaresToActivate = minSquaresToActivate;
+    }
+
+    public int getPayoutQ1Percent() {
+        return payoutQ1Percent;
+    }
+
+    public void setPayoutQ1Percent(int payoutQ1Percent) {
+        this.payoutQ1Percent = payoutQ1Percent;
+    }
+
+    public int getPayoutQ2Percent() {
+        return payoutQ2Percent;
+    }
+
+    public void setPayoutQ2Percent(int payoutQ2Percent) {
+        this.payoutQ2Percent = payoutQ2Percent;
+    }
+
+    public int getPayoutQ3Percent() {
+        return payoutQ3Percent;
+    }
+
+    public void setPayoutQ3Percent(int payoutQ3Percent) {
+        this.payoutQ3Percent = payoutQ3Percent;
+    }
+
+    public int getPayoutQ4Percent() {
+        return payoutQ4Percent;
+    }
+
+    public void setPayoutQ4Percent(int payoutQ4Percent) {
+        this.payoutQ4Percent = payoutQ4Percent;
     }
 }

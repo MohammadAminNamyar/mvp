@@ -3,12 +3,14 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
+    const ticketKey = 'squares.serviceTicket';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
         sessionId = crypto.randomUUID();
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    const serviceTicket = localStorage.getItem(ticketKey);
     if (!username) {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;
@@ -40,7 +42,16 @@
         digitsStatusDot: document.getElementById('digits-status-dot'),
         lockStatus: document.getElementById('lock-status'),
         lockStatusDot: document.getElementById('lock-status-dot'),
-        historyList: document.getElementById('history-list')
+        historyList: document.getElementById('history-list'),
+        prizeGrid: document.getElementById('grid-prizes'),
+        scoreboardPrizes: document.getElementById('scoreboard-prizes'),
+        scoreboardAwayTeam: document.getElementById('scoreboard-away-team'),
+        scoreboardHomeTeam: document.getElementById('scoreboard-home-team'),
+        scoreboardAwayScore: document.getElementById('scoreboard-away-score'),
+        scoreboardHomeScore: document.getElementById('scoreboard-home-score'),
+        scoreboardClock: document.getElementById('scoreboard-clock'),
+        scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
+        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo')
     };
 
     function fetchSnapshot() {
@@ -82,7 +93,10 @@
         }
         fetch(`/boards/${boardId}/purchase`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(serviceTicket ? { 'X-Service-Ticket': serviceTicket } : {})
+            },
             body: JSON.stringify({ sessionId, customerName, indices })
         })
             .then(handleResponse)
@@ -126,6 +140,8 @@
         renderSelected();
         renderChecklist();
         renderHistory();
+        renderPrizeBoard();
+        renderScoreboard();
         renderGrid();
     }
 
@@ -308,6 +324,78 @@
             entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
             elements.historyList.appendChild(entry);
         });
+    }
+
+    function renderPrizeBoard() {
+        if (!elements.prizeGrid) {
+            return;
+        }
+        const prizes = [
+            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+        ];
+        elements.prizeGrid.innerHTML = '';
+        prizes.forEach(prize => {
+            const card = document.createElement('div');
+            card.className = 'grid-prize';
+            const period = document.createElement('div');
+            period.className = 'prize-period';
+            const strong = document.createElement('strong');
+            strong.textContent = prize.label;
+            const sub = document.createElement('p');
+            sub.textContent = prize.period;
+            period.appendChild(strong);
+            period.appendChild(sub);
+            const amount = document.createElement('div');
+            amount.className = 'prize-amount';
+            amount.textContent = formatMoney(prize.cents);
+            card.appendChild(period);
+            card.appendChild(amount);
+            elements.prizeGrid.appendChild(card);
+        });
+    }
+
+    function renderScoreboard() {
+        if (!elements.scoreboardPrizes) {
+            return;
+        }
+        elements.scoreboardAwayTeam.textContent = snapshot.awayTeam;
+        elements.scoreboardHomeTeam.textContent = snapshot.homeTeam;
+        elements.scoreboardAwayScore.textContent = snapshot.awayScore;
+        elements.scoreboardHomeScore.textContent = snapshot.homeScore;
+        if (elements.scoreboardClock) {
+            elements.scoreboardClock.textContent = snapshot.gameClock || '-';
+        }
+        setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
+        setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
+        const prizes = [
+            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+        ];
+        elements.scoreboardPrizes.innerHTML = '';
+        prizes.forEach(prize => {
+            const item = document.createElement('div');
+            item.className = 'scoreboard-prize';
+            item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
+            elements.scoreboardPrizes.appendChild(item);
+        });
+    }
+
+    function formatMoney(cents) {
+        const value = Number(cents || 0) / 100;
+        return `$ ${value.toFixed(2)}`;
+    }
+
+    function setLogo(element, teamName) {
+        if (!element) {
+            return;
+        }
+        element.src = '/placeholder-shield.svg';
+        element.alt = teamName ? `${teamName} logo` : 'Team logo';
     }
 
     elements.confirm.addEventListener('click', purchase);

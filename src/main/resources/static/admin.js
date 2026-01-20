@@ -14,9 +14,14 @@
     const priceCentsInput = document.getElementById('price-cents');
     const housePercentInput = document.getElementById('house-percent');
     const minActivateInput = document.getElementById('min-activate');
+    const payoutQ1Input = document.getElementById('payout-q1');
+    const payoutQ2Input = document.getElementById('payout-q2');
+    const payoutQ3Input = document.getElementById('payout-q3');
+    const payoutQ4Input = document.getElementById('payout-q4');
     const boardIdInput = document.getElementById('board-id');
     const homeScoreInput = document.getElementById('home-score');
     const awayScoreInput = document.getElementById('away-score');
+    const gameClockInput = document.getElementById('game-clock');
     const quarterSelect = document.getElementById('quarter-select');
     const message = document.getElementById('admin-message');
     const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
@@ -80,7 +85,11 @@
                 awayTeam: awayTeamInput.value,
                 priceCents: Number(priceCentsInput.value),
                 housePercent: Number(housePercentInput.value),
-                minSquaresToActivate: Number(minActivateInput.value)
+                minSquaresToActivate: Number(minActivateInput.value),
+                payoutQ1Percent: Number(payoutQ1Input.value),
+                payoutQ2Percent: Number(payoutQ2Input.value),
+                payoutQ3Percent: Number(payoutQ3Input.value),
+                payoutQ4Percent: Number(payoutQ4Input.value)
             })
         })
             .then(handleResponse)
@@ -116,7 +125,8 @@
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
                 homeScore: Number(homeScoreInput.value),
-                awayScore: Number(awayScoreInput.value)
+                awayScore: Number(awayScoreInput.value),
+                gameClock: gameClockInput.value
             })
         })
             .then(handleResponse)
