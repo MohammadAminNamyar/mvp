@@ -23,7 +23,15 @@
         confirm: document.getElementById('confirm-btn'),
         customerName: document.getElementById('customer-name'),
         message: document.getElementById('ticket-message'),
-        viewerCount: document.getElementById('viewer-count')
+        viewerCount: document.getElementById('viewer-count'),
+        requirementPrice: document.getElementById('requirement-price'),
+        requirementHouse: document.getElementById('requirement-house'),
+        minRequired: document.getElementById('min-required'),
+        digitsStatus: document.getElementById('digits-status'),
+        digitsStatusDot: document.getElementById('digits-status-dot'),
+        lockStatus: document.getElementById('lock-status'),
+        lockStatusDot: document.getElementById('lock-status-dot'),
+        historyList: document.getElementById('history-list')
     };
 
     function fetchSnapshot() {
@@ -98,10 +106,15 @@
         elements.house.textContent = snapshot.housePercent;
         elements.score.textContent = `${snapshot.homeScore} - ${snapshot.awayScore}`;
         elements.quarter.textContent = snapshot.currentQuarter;
+        elements.requirementPrice.textContent = (snapshot.priceCents / 100).toFixed(2);
+        elements.requirementHouse.textContent = snapshot.housePercent;
+        elements.minRequired.textContent = snapshot.minSquaresToActivate;
         selected = new Set(snapshot.squares
             .filter(square => square.status === 'RESERVED' && square.reservedBySessionId === sessionId)
             .map(square => square.idx));
         renderSelected();
+        renderChecklist();
+        renderHistory();
         renderGrid();
     }
 
@@ -141,8 +154,8 @@
         for (let row = 0; row < 10; row++) {
             const tr = document.createElement('tr');
             const rowHeader = document.createElement('th');
-            rowHeader.className = 'team-header';
-            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : snapshot.awayTeam;
+            rowHeader.className = snapshot.digitsRevealed ? 'digit-header row-header' : 'team-header row-header';
+            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : '';
             tr.appendChild(rowHeader);
 
             for (let col = 0; col < 10; col++) {
@@ -216,6 +229,39 @@
         badge.className = 'badge';
         badge.textContent = labels.join(',');
         cell.appendChild(badge);
+    }
+
+    function renderChecklist() {
+        const digitsLabel = snapshot.digitsRevealed ? 'Yes (board locked or started)' : 'Hidden until lock';
+        elements.digitsStatus.textContent = digitsLabel;
+        elements.digitsStatusDot.className = `status-dot ${snapshot.digitsRevealed ? 'locked' : 'warn'}`;
+
+        const locked = snapshot.status !== 'OPEN';
+        elements.lockStatus.textContent = locked ? 'Locked' : 'Open for purchase';
+        elements.lockStatusDot.className = `status-dot ${locked ? 'locked' : 'ok'}`;
+    }
+
+    function renderHistory() {
+        const takenSquares = snapshot.squares
+            .filter(square => square.status === 'TAKEN' || square.status === 'HOUSE')
+            .sort((a, b) => a.idx - b.idx)
+            .slice(0, 12);
+
+        elements.historyList.innerHTML = '';
+        if (takenSquares.length === 0) {
+            const empty = document.createElement('li');
+            empty.textContent = 'No purchases yet. Be the first to claim a square.';
+            elements.historyList.appendChild(empty);
+            return;
+        }
+
+        takenSquares.forEach(square => {
+            const entry = document.createElement('li');
+            const label = square.ownerName ? square.ownerName : 'Taken';
+            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
+            entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
+            elements.historyList.appendChild(entry);
+        });
     }
 
     elements.confirm.addEventListener('click', purchase);
