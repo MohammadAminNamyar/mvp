@@ -32,6 +32,30 @@ Then open:
 - When the game starts, any empty or reserved squares convert to HOUSE.
 - WebSocket topics: `/topic/boards/{id}/snapshot` and `/topic/boards/{id}/presence`.
 
+## Requirements backlog (not yet implemented)
+- Customer & wagering entities: persistent Customer, Wager, Transaction, Balance, and DataFeed models with storage and APIs.
+- Payment processing & payouts: collect real payments and distribute winnings per quarter/final.
+- Theme and branding configuration: add 4 selectable themes on the admin page with real-time switching.
+- Return-to-pool option: per-board setting to return unclaimed squares to the pool on lock.
+- Automatic purchase tool: buy N random squares or spread purchases across boards automatically.
+- Visual celebration for winners: add a celebratory animation beyond the current border + badge.
+- Data feed integration: pull live scores from an external provider instead of manual admin updates.
+- Comprehensive database schema in the README: define how customers, wagers, transactions, balances, and feeds relate to boards/squares.
+
+## Proposed data model (planned)
+- **Customer**: `id`, `displayName`, `idmSubject`, `createdAt`.
+- **Board**: `id`, `name`, `homeTeam`, `awayTeam`, `priceCents`, `housePercent`, `status`, `createdAt`.
+- **Square**: `id`, `boardId`, `idx`, `status`, `ownerCustomerId`.
+- **Wager**: `id`, `customerId`, `boardId`, `squareIds`, `priceCents`, `status`, `createdAt`.
+- **Transaction**: `id`, `wagerId`, `customerId`, `type` (purchase/payout/refund), `amountCents`, `createdAt`.
+- **Balance**: `customerId`, `availableCents`, `holdCents`, `updatedAt`.
+- **DataFeed**: `id`, `boardId`, `provider`, `externalGameId`, `lastSyncedAt`.
+
+Relationships (planned):
+- Customer 1—* Wager; Customer 1—* Transaction; Customer 1—1 Balance.
+- Board 1—* Square; Board 1—* Wager; Board 1—1 DataFeed.
+- Wager 1—* Transaction; Wager *—* Square (via join table or stored square IDs).
+
 ## Tests
 ```bash
 mvn test

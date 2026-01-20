@@ -2,10 +2,17 @@
     const boardContainer = document.getElementById('board');
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
+    const usernameKey = 'squares.username';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
         sessionId = crypto.randomUUID();
         localStorage.setItem(sessionKey, sessionId);
+    }
+    const username = localStorage.getItem(usernameKey);
+    if (!username) {
+        const redirect = encodeURIComponent(window.location.pathname);
+        window.location.href = `/login?redirect=${redirect}`;
+        return;
     }
 
     let snapshot = null;
@@ -22,6 +29,7 @@
         selected: document.getElementById('selected'),
         confirm: document.getElementById('confirm-btn'),
         customerName: document.getElementById('customer-name'),
+        changeUser: document.getElementById('change-user'),
         message: document.getElementById('ticket-message'),
         viewerCount: document.getElementById('viewer-count'),
         requirementPrice: document.getElementById('requirement-price'),
@@ -60,7 +68,7 @@
     }
 
     function purchase() {
-        const customerName = elements.customerName.value.trim();
+        const customerName = username.trim();
         if (!customerName) {
             elements.message.textContent = 'Enter a display name.';
             return;
@@ -99,6 +107,7 @@
         if (!snapshot) {
             return;
         }
+        elements.customerName.textContent = username;
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
@@ -279,6 +288,10 @@
     }
 
     elements.confirm.addEventListener('click', purchase);
+    elements.changeUser.addEventListener('click', () => {
+        const redirect = encodeURIComponent(window.location.pathname);
+        window.location.href = `/login?redirect=${redirect}`;
+    });
 
     fetchSnapshot();
 

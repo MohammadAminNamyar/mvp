@@ -30,4 +30,9 @@ public class ViewController {
     public String admin() {
         return "admin";
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
 }
