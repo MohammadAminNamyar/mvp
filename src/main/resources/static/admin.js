@@ -25,6 +25,11 @@
         return response;
     }
 
+    function notifySuccess(text) {
+        message.textContent = text;
+        window.alert(text);
+    }
+
     document.getElementById('create-board').addEventListener('click', () => {
         fetch('/admin/boards', {
             method: 'POST',
@@ -41,7 +46,7 @@
             .then(handleResponse)
             .then(res => res.json())
             .then(board => {
-                message.textContent = `Board created with ID ${board.id}`;
+                notifySuccess(`Board created with ID ${board.id}.`);
                 boardIdInput.value = board.id;
             })
             .catch(err => {
@@ -57,7 +62,7 @@
         })
             .then(handleResponse)
             .then(() => {
-                message.textContent = 'Game started.';
+                notifySuccess('Game started.');
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -76,7 +81,7 @@
         })
             .then(handleResponse)
             .then(() => {
-                message.textContent = 'Score updated.';
+                notifySuccess('Score updated.');
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -94,7 +99,7 @@
         })
             .then(handleResponse)
             .then(() => {
-                message.textContent = 'Quarter confirmed.';
+                notifySuccess('Quarter confirmed.');
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -109,7 +114,7 @@
         })
             .then(handleResponse)
             .then(() => {
-                message.textContent = 'Board reset.';
+                notifySuccess('Board reset.');
             })
             .catch(err => {
                 message.textContent = err.message;
