@@ -1,0 +1,52 @@
+---
+dependency:
+  name: galaxy
+  options:
+    role-file: molecule/default/requirements.yml
+driver:
+  name: docker
+lint:
+  name: yamllint
+  options:
+    config-file: molecule/default/yaml-lint.yml
+platforms:
+  - name: square-game-servers-${MOLECULE_DISTRO}-${CI_JOB_ID:-local}
+    hostname: square-game-servers-${MOLECULE_DISTRO}-${CI_JOB_ID:-local}
+    groups:
+      - square_game_servers
+    image: ${MOLECULE_IMAGES:-dockerhub.alea.ca/ansible/testing}/docker-${MOLECULE_DISTRO}-ansible/docker:${MOLECULE_IMAGE_TAG:-latest}
+    pull: true
+    privileged: true
+    networks:
+      - name: square-game-servers-${CI_JOB_ID:-local}
+    command: ${MOLECULE_DOCKER_COMMAND:-/sbin/init}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    pre_build_image: true
+provisioner:
+  name: ansible
+  ansible_args:
+    - --diff
+  env:
+    ANSIBLE_TRANSFORM_INVALID_GROUP_CHARS: ignore
+  lint:
+    name: ansible-lint
+  connection_options:
+    ansible_ssh_user: ansible
+  playbooks:
+    converge: ../../${PLAYBOOK_MAIN:-playbooks/main.yml}
+  inventory:
+    group_vars:
+      eco_admintools_servers:
+        global_adm_service_host: localhost
+        activemq_network_connectors: ~
+        application_docker_registry: ${CI_REGISTRY}
+        application_docker_version: "${CI_PIPELINE_ID:-latest}"
+scenario:
+  name: default
+verifier:
+  name: testinfra
+  options:
+    sudo: true
+  lint:
+    name: flake8

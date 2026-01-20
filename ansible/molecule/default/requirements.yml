@@ -1,0 +1,11 @@
+---
+- name: global-setup
+  src: https://git.alea.ca/ansible/roles/global-setup.git
+  scm: git
+  version: master
+
+- name: healthcheck
+  src: https://git.alea.ca/ansible/roles/healthcheck.git
+  scm: git
+  version: master
+

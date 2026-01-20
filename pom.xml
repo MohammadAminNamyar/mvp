@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>squares-pool</artifactId>
+    <artifactId>squares-game</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Squares Pool</name>
     <description>Football squares pool MVP</description>

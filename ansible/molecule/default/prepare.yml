@@ -1,0 +1,4 @@
+---
+- name: Prepare - Docker
+  hosts: square_game_servers
+  roles:
