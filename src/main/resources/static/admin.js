@@ -3,7 +3,7 @@
     const username = localStorage.getItem(usernameKey);
     if (!username) {
         const redirect = encodeURIComponent('/admin');
-        window.location.href = `/login?redirect=${redirect}`;
+        window.location.href = `/admin-login?redirect=${redirect}`;
         return;
     }
 
