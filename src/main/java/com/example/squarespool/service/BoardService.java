@@ -14,6 +14,7 @@ import com.example.squarespool.model.SquareStatus;
 import com.example.squarespool.repository.BoardRepository;
 import com.example.squarespool.repository.SquareRepository;
 import com.example.squarespool.tpi.TpiClient;
+import com.example.squarespool.tpi.TpiCustomer;
 import com.example.squarespool.tpi.dto.DebitRequest;
 import com.example.squarespool.tpi.dto.DebitResponse;
 import com.example.squarespool.tpi.dto.MoneyAmount;
@@ -45,7 +46,6 @@ public class BoardService {
     private final TpiProperties tpiProperties;
     private final TpiClient tpiClient;
     private final SimpMessagingTemplate messagingTemplate;
-    private final TpiClient tpiClient;
 
     public BoardService(BoardRepository boardRepository,
                         SquareRepository squareRepository,
@@ -59,7 +59,6 @@ public class BoardService {
         this.tpiProperties = tpiProperties;
         this.tpiClient = tpiClient;
         this.messagingTemplate = messagingTemplate;
-        this.tpiClient = tpiClient;
     }
 
     @Transactional

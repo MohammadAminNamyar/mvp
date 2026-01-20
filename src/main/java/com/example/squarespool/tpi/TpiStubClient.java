@@ -1,9 +1,13 @@
 package com.example.squarespool.tpi;
 
 import com.example.squarespool.config.AppProperties;
+import com.example.squarespool.tpi.dto.DebitRequest;
+import com.example.squarespool.tpi.dto.DebitResponse;
+import com.example.squarespool.tpi.dto.MoneyAmount;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 public class TpiStubClient implements TpiClient {
@@ -33,6 +37,20 @@ public class TpiStubClient implements TpiClient {
                 : fallbackName;
 
         return new TpiCustomer(customerId, displayName);
+    }
+
+    @Override
+    public DebitResponse debit(DebitRequest request) {
+        DebitResponse response = new DebitResponse();
+        response.setResponseCode(0L);
+        response.setResponseMessage("APPROVED");
+        response.setAleaRoundId(UUID.randomUUID().toString());
+        response.setAleaTransactionId(UUID.randomUUID().toString());
+        if (request != null && request.getAmount() != null) {
+            MoneyAmount amount = request.getAmount();
+            response.setAleaAccountBalance(new MoneyAmount(amount.getCurrency(), amount.getValue()));
+        }
+        return response;
     }
 
     private String safeId(String raw) {

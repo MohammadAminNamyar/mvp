@@ -3,7 +3,7 @@ package com.example.squarespool.tpi;
 import com.example.squarespool.config.TpiProperties;
 import com.example.squarespool.tpi.dto.DebitRequest;
 import com.example.squarespool.tpi.dto.DebitResponse;
-import org.springframework.http.HttpStatus;
+import com.example.squarespool.tpi.TpiCustomer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -31,5 +31,12 @@ public class MockTpiClient implements TpiClient {
         } catch (RestClientException ex) {
             throw new IllegalStateException("Unable to reach TPI mock service", ex);
         }
+    }
+
+    @Override
+    public TpiCustomer resolveCustomer(String serviceTicket, String fallbackName) {
+        String displayName = (fallbackName == null || fallbackName.isBlank()) ? "Customer" : fallbackName;
+        String customerId = serviceTicket == null || serviceTicket.isBlank() ? "mock-customer" : serviceTicket;
+        return new TpiCustomer(customerId, displayName);
     }
 }
