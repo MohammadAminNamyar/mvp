@@ -31,3 +31,11 @@ squares:
 logging:
   level:
     org.hibernate.SQL: warn
+
+tpi:
+  base-url: http://localhost:8080/mock-tpi
+  currency: USD
+  game-type-id: 1073741824
+  game-type-variation-id: 1073741824
+  third-party-transaction-type-id: 1073741824
+  round-to-be-closed: true
