@@ -23,18 +23,17 @@
     <main class="main-content">
         <section class="login-card card">
             <h1>Access the MVP</h1>
-            <p class="muted">This is a placeholder login screen so we can capture a display name.</p>
-            <div class="idm-label">This is supposed to use CRM</div>
+            <p class="muted">Sign in with your CCA credentials to continue.</p>
             <form id="login-form" class="login-form">
                 <label class="field">
-                    <span>Display name</span>
-                    <input type="text" id="login-username" placeholder="Jane Doe" required />
+                    <span>Username</span>
+                    <input type="text" id="login-username" autocomplete="username" required />
                 </label>
                 <label class="field">
-                    <span>Access code</span>
-                    <input type="number" id="login-code" placeholder="Any number" required />
+                    <span>Password</span>
+                    <input type="password" id="login-password" autocomplete="current-password" required />
                 </label>
-                <button type="submit" class="primary-btn">Continue</button>
+                <button type="submit" class="primary-btn">Sign in</button>
                 <div class="notice" id="login-message"></div>
             </form>
         </section>

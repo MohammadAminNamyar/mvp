@@ -32,6 +32,7 @@
         changeUser: document.getElementById('change-user'),
         message: document.getElementById('ticket-message'),
         viewerCount: document.getElementById('viewer-count'),
+        loginNav: document.getElementById('login-nav'),
         requirementPrice: document.getElementById('requirement-price'),
         requirementHouse: document.getElementById('requirement-house'),
         minRequired: document.getElementById('min-required'),
@@ -108,6 +109,9 @@
             return;
         }
         elements.customerName.textContent = username;
+        if (elements.loginNav) {
+            elements.loginNav.textContent = username;
+        }
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';

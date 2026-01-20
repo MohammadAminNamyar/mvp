@@ -16,7 +16,7 @@
             </div>
         </div>
         <nav class="nav-actions">
-            <a class="nav-link" href="/login">Login</a>
+            <a class="nav-link" href="/login" id="login-nav">Login</a>
             <a class="nav-link" href="/admin">Admin Console</a>
         </nav>
     </header>
@@ -45,5 +45,15 @@
         <p class="notice">Use the admin page to start the game, lock boards, and confirm quarters.</p>
     </main>
 </div>
+
+<script>
+    (function () {
+        const loginNav = document.getElementById('login-nav');
+        const username = localStorage.getItem('squares.username');
+        if (loginNav && username) {
+            loginNav.textContent = username;
+        }
+    })();
+</script>
 </body>
 </html>
