@@ -5,41 +5,60 @@
     <title>Squares Pool Admin</title>
     <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
-<header>
-    <div>
-        <a href="/">← Back</a>
-        <h1>Admin Controls</h1>
-    </div>
-</header>
+<body class="theme-dark">
+<div class="app-shell">
+    <header class="top-nav">
+        <div class="brand">
+            <span class="logo">■</span>
+            <div>
+                <div class="brand-title">Squares Pool</div>
+                <div class="brand-subtitle">Admin Console</div>
+            </div>
+        </div>
+        <nav class="nav-actions">
+            <a class="nav-link" href="/">Back to Lobby</a>
+        </nav>
+    </header>
 
-<div class="admin-panel">
-    <h2>Create Board</h2>
-    <input type="text" id="admin-token" placeholder="Admin token" value="admin" />
-    <input type="text" id="board-name" placeholder="Board name" />
-    <input type="text" id="home-team" placeholder="Home team" />
-    <input type="text" id="away-team" placeholder="Away team" />
-    <input type="number" id="price-cents" placeholder="Price (cents)" value="500" />
-    <input type="number" id="house-percent" placeholder="House percent" value="10" />
-    <input type="number" id="min-activate" placeholder="Min squares to activate" value="0" />
-    <button id="create-board">Create Board</button>
+    <main class="main-content">
+        <section class="hero-card">
+            <div class="hero-heading">
+                <div>
+                    <h1>Admin Controls</h1>
+                    <p class="muted">Create boards, lock games, and confirm quarters.</p>
+                </div>
+            </div>
+        </section>
 
-    <h2>Board Actions</h2>
-    <input type="number" id="board-id" placeholder="Board ID" />
-    <button id="start-game">Start Game (Lock)</button>
-    <input type="number" id="home-score" placeholder="Home score" value="0" />
-    <input type="number" id="away-score" placeholder="Away score" value="0" />
-    <button id="update-score">Update Score</button>
-    <select id="quarter-select">
-        <option value="Q1">Confirm Q1 (1st)</option>
-        <option value="Q2">Confirm Q2 (half)</option>
-        <option value="Q3">Confirm Q3 (3rd)</option>
-        <option value="Q4">Confirm Q4 (final)</option>
-    </select>
-    <button id="confirm-quarter">Confirm Quarter</button>
-    <button id="reset-board">Reset Board</button>
+        <div class="admin-panel">
+            <h2>Create Board</h2>
+            <input type="text" id="admin-token" placeholder="Admin token" value="admin" />
+            <input type="text" id="board-name" placeholder="Board name" />
+            <input type="text" id="home-team" placeholder="Home team" />
+            <input type="text" id="away-team" placeholder="Away team" />
+            <input type="number" id="price-cents" placeholder="Price (cents)" value="500" />
+            <input type="number" id="house-percent" placeholder="House percent" value="10" />
+            <input type="number" id="min-activate" placeholder="Min squares to activate" value="0" />
+            <button id="create-board">Create Board</button>
 
-    <p class="notice" id="admin-message"></p>
+            <h2>Board Actions</h2>
+            <input type="number" id="board-id" placeholder="Board ID" />
+            <button id="start-game">Start Game (Lock)</button>
+            <input type="number" id="home-score" placeholder="Home score" value="0" />
+            <input type="number" id="away-score" placeholder="Away score" value="0" />
+            <button id="update-score">Update Score</button>
+            <select id="quarter-select">
+                <option value="Q1">Confirm Q1 (1st)</option>
+                <option value="Q2">Confirm Q2 (half)</option>
+                <option value="Q3">Confirm Q3 (3rd)</option>
+                <option value="Q4">Confirm Q4 (final)</option>
+            </select>
+            <button id="confirm-quarter">Confirm Quarter</button>
+            <button id="reset-board">Reset Board</button>
+
+            <p class="notice" id="admin-message"></p>
+        </div>
+    </main>
 </div>
 
 <script src="/admin.js"></script>

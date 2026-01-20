@@ -1,33 +1,199 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f7f7f7;
-    color: #222;
+* {
+    box-sizing: border-box;
 }
 
-header {
+body {
+    margin: 0;
+    font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+    background: radial-gradient(circle at top, #1b1f33, #111320 60%, #0a0b13 100%);
+    color: #f4f6ff;
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.theme-dark .app-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.top-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    padding: 20px 36px;
+    background: rgba(20, 24, 40, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
 }
 
-.board-meta {
+.brand {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #22d3ee);
+    color: #0b0d1a;
+    font-weight: 700;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.brand-subtitle {
+    font-size: 12px;
+    color: #a9b0c7;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-link {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px;
+}
+
+.main-content {
+    padding: 28px 36px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.hero-card {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(14, 116, 144, 0.1));
+    border-radius: 18px;
+    padding: 20px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.hero-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
+}
+
+.hero-heading h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.muted {
+    color: #a9b0c7;
+    margin: 6px 0 0;
+}
+
+.small {
+    font-size: 12px;
+}
+
+.pill-stack {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .status-pill {
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
     font-size: 12px;
-    background: #e0e0e0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.status-pill.glow {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(14, 116, 144, 0.4));
+    border-color: rgba(59, 130, 246, 0.8);
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+.card {
+    background: rgba(22, 27, 43, 0.85);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.board-panel .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.board-panel h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.legend-item.available {
+    border-color: rgba(59, 130, 246, 0.6);
+}
+
+.legend-item.reserved {
+    border-color: rgba(250, 204, 21, 0.7);
+}
+
+.legend-item.taken {
+    border-color: rgba(34, 197, 94, 0.7);
+}
+
+.legend-item.house {
+    border-color: rgba(148, 163, 184, 0.7);
+}
+
+.legend-item.current {
+    border-color: rgba(14, 116, 144, 0.8);
 }
 
 .grid {
     border-collapse: collapse;
+    width: 100%;
 }
 
 .grid td,
@@ -35,93 +201,155 @@ header {
     width: 48px;
     height: 48px;
     text-align: center;
-    border: 1px solid #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 12px;
     position: relative;
-    background: #fff;
+    background: rgba(10, 12, 20, 0.7);
+    color: #f4f6ff;
 }
 
 .grid th.team-header {
-    background: #222;
-    color: #fff;
+    background: rgba(16, 19, 30, 0.9);
+    color: #9bd0ff;
     font-weight: 600;
+    letter-spacing: 0.4px;
 }
 
 .grid th.digit-header {
-    background: #444;
-    color: #fff;
+    background: rgba(44, 52, 78, 0.9);
+    color: #facc15;
 }
 
 .square.empty {
     cursor: pointer;
-    background: #ffffff;
+    background: rgba(10, 12, 20, 0.6);
 }
 
 .square.reserved-me {
-    background: #fff3cd;
-    border-color: #ffec99;
+    background: rgba(250, 204, 21, 0.2);
+    border-color: rgba(250, 204, 21, 0.6);
+    color: #fef3c7;
 }
 
 .square.reserved-other {
-    background: #f8d7da;
-    color: #721c24;
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
 }
 
 .square.taken {
-    background: #d1e7dd;
-    color: #0f5132;
+    background: rgba(34, 197, 94, 0.2);
+    color: #bbf7d0;
 }
 
 .square.house {
-    background: #e2e3e5;
-    color: #41464b;
+    background: rgba(148, 163, 184, 0.25);
+    color: #e2e8f0;
 }
 
 .square.current-winner {
-    box-shadow: inset 0 0 0 3px #007bff;
+    box-shadow: inset 0 0 0 3px rgba(14, 116, 144, 0.8);
 }
 
 .badge {
     position: absolute;
     bottom: 2px;
     right: 2px;
-    background: #0d6efd;
-    color: #fff;
-    padding: 2px 4px;
-    border-radius: 4px;
+    background: #0ea5e9;
+    color: #0b0d1a;
+    padding: 2px 6px;
+    border-radius: 6px;
     font-size: 10px;
-}
-
-.ticket {
-    margin-top: 16px;
-    padding: 12px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    max-width: 400px;
+    font-weight: 700;
 }
 
 .ticket input,
 .ticket button {
-    padding: 8px;
+    padding: 10px;
     margin-top: 8px;
     width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 18, 31, 0.8);
+    color: #f4f6ff;
 }
 
-.controls {
-    margin-top: 12px;
+.ticket button {
+    background: linear-gradient(135deg, #2563eb, #22d3ee);
+    color: #0b0d1a;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .notice {
     font-size: 12px;
-    color: #666;
+    color: #a9b0c7;
+    margin-top: 8px;
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.checklist {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    margin-right: 8px;
+}
+
+.status-dot.ok {
+    background: #22c55e;
+}
+
+.status-dot.warn {
+    background: #f59e0b;
+}
+
+.status-dot.locked {
+    background: #38bdf8;
+}
+
+.footnote {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #8b93aa;
+}
+
+.history-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.history-list li {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(15, 18, 31, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .admin-panel {
-    background: #fff;
+    background: rgba(22, 27, 43, 0.85);
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 12px;
     max-width: 560px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .admin-panel input,
@@ -130,11 +358,32 @@ header {
     padding: 8px;
     margin-top: 8px;
     width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(15, 18, 31, 0.8);
+    color: #f4f6ff;
 }
 
-.card {
-    background: #fff;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 12px;
+.controls {
+    margin-top: 12px;
+}
+
+.card ul {
+    padding-left: 18px;
+}
+
+.card a {
+    color: #93c5fd;
+}
+
+@media (max-width: 1100px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .grid td,
+    .grid th {
+        width: 40px;
+        height: 40px;
+    }
 }
