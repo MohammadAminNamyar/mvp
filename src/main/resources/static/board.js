@@ -197,6 +197,15 @@
         boardContainer.appendChild(table);
     }
 
+    function getTakenLabel(square) {
+        if (!square.ownerName) {
+            return 'Taken';
+        }
+        const normalizedOwner = square.ownerName.trim().toLowerCase();
+        const normalizedUser = username.trim().toLowerCase();
+        return normalizedOwner === normalizedUser ? square.ownerName : 'Taken';
+    }
+
     function applySquareState(cell, square) {
         if (!square) {
             return;
@@ -226,7 +235,7 @@
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            cell.textContent = square.ownerName || 'Taken';
+            cell.textContent = getTakenLabel(square);
         } else if (square.status === 'HOUSE') {
             cell.classList.add('house');
             cell.textContent = 'HOUSE';
@@ -281,7 +290,7 @@
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
             const isHouse = square.status === 'HOUSE';
-            const label = isHouse ? 'House' : (square.ownerName ? square.ownerName : 'Taken');
+            const label = isHouse ? 'House' : getTakenLabel(square);
             const statusLabel = isHouse ? 'House' : 'Buyer';
             entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
             elements.historyList.appendChild(entry);
