@@ -54,6 +54,7 @@
     </dependencies>
 
     <build>
+        <finalName>square-game</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
