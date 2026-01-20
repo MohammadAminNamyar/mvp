@@ -132,21 +132,32 @@
         const titleRow = document.createElement('tr');
         const titleCell = document.createElement('th');
         titleCell.className = 'team-header';
-        titleCell.colSpan = 11;
+        titleCell.colSpan = 12;
         titleCell.textContent = snapshot.homeTeam;
         titleRow.appendChild(titleCell);
         table.appendChild(titleRow);
 
         const headerRow = document.createElement('tr');
+        const verticalTeam = document.createElement('th');
+        verticalTeam.className = 'team-header vertical-team';
+        verticalTeam.rowSpan = 11;
+        const verticalLabel = document.createElement('span');
+        verticalLabel.textContent = snapshot.awayTeam;
+        verticalTeam.appendChild(verticalLabel);
+        headerRow.appendChild(verticalTeam);
+
         const corner = document.createElement('th');
-        corner.className = 'team-header';
-        corner.textContent = snapshot.awayTeam;
+        corner.className = 'team-header row-digit-corner';
+        corner.textContent = '';
         headerRow.appendChild(corner);
 
         for (let col = 0; col < 10; col++) {
             const th = document.createElement('th');
             th.className = 'digit-header';
-            th.textContent = snapshot.digitsRevealed ? snapshot.colDigits[col] : '';
+            th.textContent = snapshot.digitsRevealed ? snapshot.colDigits[col] : '•';
+            if (!snapshot.digitsRevealed) {
+                th.classList.add('hidden-digit');
+            }
             headerRow.appendChild(th);
         }
         table.appendChild(headerRow);
@@ -154,8 +165,11 @@
         for (let row = 0; row < 10; row++) {
             const tr = document.createElement('tr');
             const rowHeader = document.createElement('th');
-            rowHeader.className = snapshot.digitsRevealed ? 'digit-header row-header' : 'team-header row-header';
-            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : '';
+            rowHeader.className = 'digit-header row-header';
+            rowHeader.textContent = snapshot.digitsRevealed ? snapshot.rowDigits[row] : '•';
+            if (!snapshot.digitsRevealed) {
+                rowHeader.classList.add('hidden-digit');
+            }
             tr.appendChild(rowHeader);
 
             for (let col = 0; col < 10; col++) {
