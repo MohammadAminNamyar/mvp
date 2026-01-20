@@ -280,8 +280,9 @@
 
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
-            const label = square.ownerName ? square.ownerName : 'Taken';
-            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
+            const isHouse = square.status === 'HOUSE';
+            const label = isHouse ? 'House' : (square.ownerName ? square.ownerName : 'Taken');
+            const statusLabel = isHouse ? 'House' : 'Buyer';
             entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
             elements.historyList.appendChild(entry);
         });

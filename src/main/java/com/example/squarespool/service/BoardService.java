@@ -360,7 +360,11 @@ public class BoardService {
         snapshot.setRowIndex(square.getRowIndex());
         snapshot.setColIndex(square.getColIndex());
         snapshot.setStatus(square.getStatus());
-        snapshot.setOwnerName(square.getOwnerName());
+        if (appProperties.isShowPurchaserNames()) {
+            snapshot.setOwnerName(square.getOwnerName());
+        } else {
+            snapshot.setOwnerName(null);
+        }
         snapshot.setReservedBySessionId(square.getReservedBySessionId());
         snapshot.setReservedUntil(square.getReservedUntil());
         snapshot.setWonQ1(square.isWonQ1());

@@ -1,4 +1,12 @@
 (function () {
+    const usernameKey = 'squares.username';
+    const username = localStorage.getItem(usernameKey);
+    if (!username) {
+        const redirect = encodeURIComponent('/admin');
+        window.location.href = `/login?redirect=${redirect}`;
+        return;
+    }
+
     const adminTokenInput = document.getElementById('admin-token');
     const boardNameInput = document.getElementById('board-name');
     const homeTeamInput = document.getElementById('home-team');
@@ -11,6 +19,7 @@
     const awayScoreInput = document.getElementById('away-score');
     const quarterSelect = document.getElementById('quarter-select');
     const message = document.getElementById('admin-message');
+    const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
 
     function tokenHeader() {
         return { 'X-Admin-Token': adminTokenInput.value.trim() };
@@ -29,6 +38,37 @@
         message.textContent = text;
         window.alert(text);
     }
+
+    function loadSettings() {
+        fetch('/admin/settings', {
+            headers: tokenHeader()
+        })
+            .then(handleResponse)
+            .then(res => res.json())
+            .then(settings => {
+                showPurchaserNamesToggle.checked = settings.showPurchaserNames;
+            })
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    }
+
+    document.getElementById('save-settings').addEventListener('click', () => {
+        fetch('/admin/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...tokenHeader() },
+            body: JSON.stringify({
+                showPurchaserNames: showPurchaserNamesToggle.checked
+            })
+        })
+            .then(handleResponse)
+            .then(() => {
+                notifySuccess('Visibility settings saved.');
+            })
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    });
 
     document.getElementById('create-board').addEventListener('click', () => {
         fetch('/admin/boards', {
@@ -120,4 +160,6 @@
                 message.textContent = err.message;
             });
     });
+
+    loadSettings();
 })();
