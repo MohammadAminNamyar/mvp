@@ -16,6 +16,7 @@
     }
 
     let snapshot = null;
+    let previousSnapshot = null;
     let selected = new Set();
 
     const elements = {
@@ -32,7 +33,6 @@
         changeUser: document.getElementById('change-user'),
         message: document.getElementById('ticket-message'),
         viewerCount: document.getElementById('viewer-count'),
-        loginNav: document.getElementById('login-nav'),
         requirementPrice: document.getElementById('requirement-price'),
         requirementHouse: document.getElementById('requirement-house'),
         minRequired: document.getElementById('min-required'),
@@ -47,6 +47,7 @@
         return fetch(`/boards/${boardId}`)
             .then(response => response.json())
             .then(data => {
+                previousSnapshot = snapshot;
                 snapshot = data;
                 render();
             });
@@ -109,9 +110,6 @@
             return;
         }
         elements.customerName.textContent = username;
-        if (elements.loginNav) {
-            elements.loginNav.textContent = username;
-        }
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
@@ -201,20 +199,24 @@
         boardContainer.appendChild(table);
     }
 
-    function getTakenLabel(square) {
-        if (!square.ownerName) {
-            return 'Taken';
-        }
-        const normalizedOwner = square.ownerName.trim().toLowerCase();
-        const normalizedUser = username.trim().toLowerCase();
-        return normalizedOwner === normalizedUser ? square.ownerName : 'Taken';
+    function isNewlyReservedByOther(square) {
+        if (!previousSnapshot) return false;
+        if (square.status !== 'RESERVED') return false;
+        if (square.reservedBySessionId === sessionId) return false;
+        
+        const prevSquare = previousSnapshot.squares.find(s => s.idx === square.idx);
+        if (!prevSquare) return true;
+        
+        // Check if this square was NOT reserved before, or was reserved by a different session
+        return prevSquare.status !== 'RESERVED' || 
+               prevSquare.reservedBySessionId !== square.reservedBySessionId;
     }
 
     function applySquareState(cell, square) {
         if (!square) {
             return;
         }
-        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner');
+        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner', 'flash');
         cell.textContent = '';
         const isReservedByMe = square.status === 'RESERVED' && square.reservedBySessionId === sessionId;
         if (square.status === 'EMPTY') {
@@ -235,11 +237,19 @@
                 }, { once: true });
             } else {
                 cell.classList.add('reserved-other');
-                cell.textContent = 'X';
+                // Add flash animation only for newly reserved squares by others
+                if (isNewlyReservedByOther(square)) {
+                    cell.classList.add('flash');
+                    // Remove flash class after animation completes
+                    setTimeout(() => {
+                        cell.classList.remove('flash');
+                    }, 400);
+                }
+                // X is displayed via CSS ::after pseudo-element
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            cell.textContent = getTakenLabel(square);
+            cell.textContent = square.ownerName || 'Taken';
         } else if (square.status === 'HOUSE') {
             cell.classList.add('house');
             cell.textContent = 'HOUSE';
@@ -293,9 +303,8 @@
 
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
-            const isHouse = square.status === 'HOUSE';
-            const label = isHouse ? 'House' : getTakenLabel(square);
-            const statusLabel = isHouse ? 'House' : 'Buyer';
+            const label = square.ownerName ? square.ownerName : 'Taken';
+            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
             entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
             elements.historyList.appendChild(entry);
         });
@@ -314,6 +323,7 @@
     stomp.debug = null;
     stomp.connect({}, () => {
         stomp.subscribe(`/topic/boards/${boardId}/snapshot`, message => {
+            previousSnapshot = snapshot;
             snapshot = JSON.parse(message.body);
             render();
         });
