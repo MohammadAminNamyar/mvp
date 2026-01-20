@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Squares Board</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+    <div>
+        <a href="/">← Back</a>
+        <h1 id="board-name">Board</h1>
+    </div>
+    <div>
+        <span class="status-pill" id="board-status">OPEN</span>
+        <span class="status-pill">Viewers: <span id="viewer-count">0</span></span>
+    </div>
+</header>
+
+<div class="board-meta">
+    <div class="status-pill" id="activation-status">Not Active</div>
+    <div class="status-pill">Price: $<span id="price"></span></div>
+    <div class="status-pill">House: <span id="house"></span>%</div>
+    <div class="status-pill">Score: <span id="score"></span></div>
+    <div class="status-pill">Quarter: <span id="quarter"></span></div>
+</div>
+
+<div id="board" th:attr="data-board-id=${boardId}"></div>
+
+<div class="ticket">
+    <h3>Purchase Ticket</h3>
+    <div>Selected squares: <span id="selected">None</span></div>
+    <input type="text" id="customer-name" placeholder="Your display name" />
+    <button id="confirm-btn">Confirm Purchase</button>
+    <div class="notice" id="ticket-message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="/board.js"></script>
+</body>
+</html>
