@@ -3,12 +3,14 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
+    const ticketKey = 'squares.serviceTicket';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
         sessionId = crypto.randomUUID();
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    const serviceTicket = localStorage.getItem(ticketKey);
     if (!username) {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;
@@ -16,6 +18,7 @@
     }
 
     let snapshot = null;
+    let previousSnapshot = null;
     let selected = new Set();
 
     const elements = {
@@ -32,7 +35,6 @@
         changeUser: document.getElementById('change-user'),
         message: document.getElementById('ticket-message'),
         viewerCount: document.getElementById('viewer-count'),
-        loginNav: document.getElementById('login-nav'),
         requirementPrice: document.getElementById('requirement-price'),
         requirementHouse: document.getElementById('requirement-house'),
         minRequired: document.getElementById('min-required'),
@@ -40,13 +42,23 @@
         digitsStatusDot: document.getElementById('digits-status-dot'),
         lockStatus: document.getElementById('lock-status'),
         lockStatusDot: document.getElementById('lock-status-dot'),
-        historyList: document.getElementById('history-list')
+        historyList: document.getElementById('history-list'),
+        prizeGrid: document.getElementById('grid-prizes'),
+        scoreboardPrizes: document.getElementById('scoreboard-prizes'),
+        scoreboardAwayTeam: document.getElementById('scoreboard-away-team'),
+        scoreboardHomeTeam: document.getElementById('scoreboard-home-team'),
+        scoreboardAwayScore: document.getElementById('scoreboard-away-score'),
+        scoreboardHomeScore: document.getElementById('scoreboard-home-score'),
+        scoreboardClock: document.getElementById('scoreboard-clock'),
+        scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
+        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo')
     };
 
     function fetchSnapshot() {
         return fetch(`/boards/${boardId}`)
             .then(response => response.json())
             .then(data => {
+                previousSnapshot = snapshot;
                 snapshot = data;
                 render();
             });
@@ -81,7 +93,10 @@
         }
         fetch(`/boards/${boardId}/purchase`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...(serviceTicket ? { 'X-Service-Ticket': serviceTicket } : {})
+            },
             body: JSON.stringify({ sessionId, customerName, indices })
         })
             .then(handleResponse)
@@ -109,9 +124,6 @@
             return;
         }
         elements.customerName.textContent = username;
-        if (elements.loginNav) {
-            elements.loginNav.textContent = username;
-        }
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
@@ -128,6 +140,8 @@
         renderSelected();
         renderChecklist();
         renderHistory();
+        renderPrizeBoard();
+        renderScoreboard();
         renderGrid();
     }
 
@@ -201,20 +215,24 @@
         boardContainer.appendChild(table);
     }
 
-    function getTakenLabel(square) {
-        if (!square.ownerName) {
-            return 'Taken';
-        }
-        const normalizedOwner = square.ownerName.trim().toLowerCase();
-        const normalizedUser = username.trim().toLowerCase();
-        return normalizedOwner === normalizedUser ? square.ownerName : 'Taken';
+    function isNewlyReservedByOther(square) {
+        if (!previousSnapshot) return false;
+        if (square.status !== 'RESERVED') return false;
+        if (square.reservedBySessionId === sessionId) return false;
+        
+        const prevSquare = previousSnapshot.squares.find(s => s.idx === square.idx);
+        if (!prevSquare) return true;
+        
+        // Check if this square was NOT reserved before, or was reserved by a different session
+        return prevSquare.status !== 'RESERVED' || 
+               prevSquare.reservedBySessionId !== square.reservedBySessionId;
     }
 
     function applySquareState(cell, square) {
         if (!square) {
             return;
         }
-        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner');
+        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner', 'flash');
         cell.textContent = '';
         const isReservedByMe = square.status === 'RESERVED' && square.reservedBySessionId === sessionId;
         if (square.status === 'EMPTY') {
@@ -235,11 +253,19 @@
                 }, { once: true });
             } else {
                 cell.classList.add('reserved-other');
-                cell.textContent = 'X';
+                // Add flash animation only for newly reserved squares by others
+                if (isNewlyReservedByOther(square)) {
+                    cell.classList.add('flash');
+                    // Remove flash class after animation completes
+                    setTimeout(() => {
+                        cell.classList.remove('flash');
+                    }, 400);
+                }
+                // X is displayed via CSS ::after pseudo-element
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            cell.textContent = getTakenLabel(square);
+            cell.textContent = square.ownerName || 'Taken';
         } else if (square.status === 'HOUSE') {
             cell.classList.add('house');
             cell.textContent = 'HOUSE';
@@ -293,12 +319,83 @@
 
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
-            const isHouse = square.status === 'HOUSE';
-            const label = isHouse ? 'House' : getTakenLabel(square);
-            const statusLabel = isHouse ? 'House' : 'Buyer';
+            const label = square.ownerName ? square.ownerName : 'Taken';
+            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
             entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
             elements.historyList.appendChild(entry);
         });
+    }
+
+    function renderPrizeBoard() {
+        if (!elements.prizeGrid) {
+            return;
+        }
+        const prizes = [
+            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+        ];
+        elements.prizeGrid.innerHTML = '';
+        prizes.forEach(prize => {
+            const card = document.createElement('div');
+            card.className = 'grid-prize';
+            const period = document.createElement('div');
+            period.className = 'prize-period';
+            const strong = document.createElement('strong');
+            strong.textContent = prize.label;
+            const sub = document.createElement('p');
+            sub.textContent = prize.period;
+            period.appendChild(strong);
+            period.appendChild(sub);
+            const amount = document.createElement('div');
+            amount.className = 'prize-amount';
+            amount.textContent = formatMoney(prize.cents);
+            card.appendChild(period);
+            card.appendChild(amount);
+            elements.prizeGrid.appendChild(card);
+        });
+    }
+
+    function renderScoreboard() {
+        if (!elements.scoreboardPrizes) {
+            return;
+        }
+        elements.scoreboardAwayTeam.textContent = snapshot.awayTeam;
+        elements.scoreboardHomeTeam.textContent = snapshot.homeTeam;
+        elements.scoreboardAwayScore.textContent = snapshot.awayScore;
+        elements.scoreboardHomeScore.textContent = snapshot.homeScore;
+        if (elements.scoreboardClock) {
+            elements.scoreboardClock.textContent = snapshot.gameClock || '-';
+        }
+        setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
+        setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
+        const prizes = [
+            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+        ];
+        elements.scoreboardPrizes.innerHTML = '';
+        prizes.forEach(prize => {
+            const item = document.createElement('div');
+            item.className = 'scoreboard-prize';
+            item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
+            elements.scoreboardPrizes.appendChild(item);
+        });
+    }
+
+    function formatMoney(cents) {
+        const value = Number(cents || 0) / 100;
+        return `$ ${value.toFixed(2)}`;
+    }
+
+    function setLogo(element, teamName) {
+        if (!element) {
+            return;
+        }
+        element.src = '/placeholder-shield.svg';
+        element.alt = teamName ? `${teamName} logo` : 'Team logo';
     }
 
     elements.confirm.addEventListener('click', purchase);
@@ -314,6 +411,7 @@
     stomp.debug = null;
     stomp.connect({}, () => {
         stomp.subscribe(`/topic/boards/${boardId}/snapshot`, message => {
+            previousSnapshot = snapshot;
             snapshot = JSON.parse(message.body);
             render();
         });

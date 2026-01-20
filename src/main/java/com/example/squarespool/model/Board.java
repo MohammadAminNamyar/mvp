@@ -32,6 +32,10 @@ public class Board {
     private int priceCents;
     private int housePercent;
     private int minSquaresToActivate;
+    private int payoutQ1Percent = 25;
+    private int payoutQ2Percent = 25;
+    private int payoutQ3Percent = 25;
+    private int payoutQ4Percent = 25;
 
     @Enumerated(EnumType.STRING)
     private BoardStatus status = BoardStatus.OPEN;
@@ -41,6 +45,7 @@ public class Board {
 
     private int homeScore;
     private int awayScore;
+    private String gameClock;
 
     @Enumerated(EnumType.STRING)
     private Quarter currentQuarter = Quarter.Q1;
@@ -107,6 +112,38 @@ public class Board {
         this.minSquaresToActivate = minSquaresToActivate;
     }
 
+    public int getPayoutQ1Percent() {
+        return payoutQ1Percent;
+    }
+
+    public void setPayoutQ1Percent(int payoutQ1Percent) {
+        this.payoutQ1Percent = payoutQ1Percent;
+    }
+
+    public int getPayoutQ2Percent() {
+        return payoutQ2Percent;
+    }
+
+    public void setPayoutQ2Percent(int payoutQ2Percent) {
+        this.payoutQ2Percent = payoutQ2Percent;
+    }
+
+    public int getPayoutQ3Percent() {
+        return payoutQ3Percent;
+    }
+
+    public void setPayoutQ3Percent(int payoutQ3Percent) {
+        this.payoutQ3Percent = payoutQ3Percent;
+    }
+
+    public int getPayoutQ4Percent() {
+        return payoutQ4Percent;
+    }
+
+    public void setPayoutQ4Percent(int payoutQ4Percent) {
+        this.payoutQ4Percent = payoutQ4Percent;
+    }
+
     public BoardStatus getStatus() {
         return status;
     }
@@ -145,6 +182,14 @@ public class Board {
 
     public void setAwayScore(int awayScore) {
         this.awayScore = awayScore;
+    }
+
+    public String getGameClock() {
+        return gameClock;
+    }
+
+    public void setGameClock(String gameClock) {
+        this.gameClock = gameClock;
     }
 
     public Quarter getCurrentQuarter() {

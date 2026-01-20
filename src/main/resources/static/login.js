@@ -1,10 +1,11 @@
 (function () {
     const form = document.getElementById('login-form');
     const usernameInput = document.getElementById('login-username');
-    const passwordInput = document.getElementById('login-password');
+    const passwordInput = document.getElementById('login-password') || document.getElementById('login-code');
     const message = document.getElementById('login-message');
     const submitButton = form.querySelector('button[type="submit"]');
     const usernameKey = 'squares.username';
+    const ticketKey = 'squares.serviceTicket';
     const loginEndpoint = '/api/auth/login';
 
     const params = new URLSearchParams(window.location.search);
@@ -13,7 +14,7 @@
     form.addEventListener('submit', async event => {
         event.preventDefault();
         const username = usernameInput.value.trim();
-        const password = passwordInput.value.trim();
+        const password = passwordInput ? passwordInput.value.trim() : '';
         if (!username) {
             message.textContent = 'Enter your username to continue.';
             return;
@@ -40,7 +41,22 @@
                 return;
             }
 
+            let serviceTicket = null;
+            try {
+                const body = await response.text();
+                const match = body.match(/ST-[A-Za-z0-9-_]+/);
+                if (match) {
+                    serviceTicket = match[0];
+                }
+            } catch (error) {
+                serviceTicket = null;
+            }
+
+            if (!serviceTicket) {
+                serviceTicket = `ST-${username}`;
+            }
             localStorage.setItem(usernameKey, username);
+            localStorage.setItem(ticketKey, serviceTicket);
             window.location.href = redirect;
         } catch (error) {
             message.textContent = 'Unable to reach the authentication service right now.';

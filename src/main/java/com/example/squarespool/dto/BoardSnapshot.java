@@ -14,9 +14,14 @@ public class BoardSnapshot {
     private int priceCents;
     private int housePercent;
     private int minSquaresToActivate;
+    private int payoutQ1Percent;
+    private int payoutQ2Percent;
+    private int payoutQ3Percent;
+    private int payoutQ4Percent;
     private BoardStatus status;
     private int homeScore;
     private int awayScore;
+    private String gameClock;
     private Quarter currentQuarter;
     private Set<Quarter> confirmedQuarters;
     private boolean digitsRevealed;
@@ -25,6 +30,11 @@ public class BoardSnapshot {
     private int purchasedCount;
     private boolean active;
     private Integer currentWinnerIdx;
+    private int prizePoolCents;
+    private int prizeQ1Cents;
+    private int prizeQ2Cents;
+    private int prizeQ3Cents;
+    private int prizeQ4Cents;
     private List<SquareSnapshot> squares;
 
     public Long getBoardId() {
@@ -83,6 +93,38 @@ public class BoardSnapshot {
         this.minSquaresToActivate = minSquaresToActivate;
     }
 
+    public int getPayoutQ1Percent() {
+        return payoutQ1Percent;
+    }
+
+    public void setPayoutQ1Percent(int payoutQ1Percent) {
+        this.payoutQ1Percent = payoutQ1Percent;
+    }
+
+    public int getPayoutQ2Percent() {
+        return payoutQ2Percent;
+    }
+
+    public void setPayoutQ2Percent(int payoutQ2Percent) {
+        this.payoutQ2Percent = payoutQ2Percent;
+    }
+
+    public int getPayoutQ3Percent() {
+        return payoutQ3Percent;
+    }
+
+    public void setPayoutQ3Percent(int payoutQ3Percent) {
+        this.payoutQ3Percent = payoutQ3Percent;
+    }
+
+    public int getPayoutQ4Percent() {
+        return payoutQ4Percent;
+    }
+
+    public void setPayoutQ4Percent(int payoutQ4Percent) {
+        this.payoutQ4Percent = payoutQ4Percent;
+    }
+
     public BoardStatus getStatus() {
         return status;
     }
@@ -105,6 +147,14 @@ public class BoardSnapshot {
 
     public void setAwayScore(int awayScore) {
         this.awayScore = awayScore;
+    }
+
+    public String getGameClock() {
+        return gameClock;
+    }
+
+    public void setGameClock(String gameClock) {
+        this.gameClock = gameClock;
     }
 
     public Quarter getCurrentQuarter() {
@@ -169,6 +219,46 @@ public class BoardSnapshot {
 
     public void setCurrentWinnerIdx(Integer currentWinnerIdx) {
         this.currentWinnerIdx = currentWinnerIdx;
+    }
+
+    public int getPrizePoolCents() {
+        return prizePoolCents;
+    }
+
+    public void setPrizePoolCents(int prizePoolCents) {
+        this.prizePoolCents = prizePoolCents;
+    }
+
+    public int getPrizeQ1Cents() {
+        return prizeQ1Cents;
+    }
+
+    public void setPrizeQ1Cents(int prizeQ1Cents) {
+        this.prizeQ1Cents = prizeQ1Cents;
+    }
+
+    public int getPrizeQ2Cents() {
+        return prizeQ2Cents;
+    }
+
+    public void setPrizeQ2Cents(int prizeQ2Cents) {
+        this.prizeQ2Cents = prizeQ2Cents;
+    }
+
+    public int getPrizeQ3Cents() {
+        return prizeQ3Cents;
+    }
+
+    public void setPrizeQ3Cents(int prizeQ3Cents) {
+        this.prizeQ3Cents = prizeQ3Cents;
+    }
+
+    public int getPrizeQ4Cents() {
+        return prizeQ4Cents;
+    }
+
+    public void setPrizeQ4Cents(int prizeQ4Cents) {
+        this.prizeQ4Cents = prizeQ4Cents;
     }
 
     public List<SquareSnapshot> getSquares() {
