@@ -20,6 +20,7 @@ squares:
   reservationTtlSeconds: 30
   adminToken: admin
   houseOnLock: true
+  showPurchaserNames: false
 
 logging:
   level:

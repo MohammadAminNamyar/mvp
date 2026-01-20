@@ -1,6 +1,8 @@
 package com.example.squarespool.controller;
 
 import com.example.squarespool.config.AppProperties;
+import com.example.squarespool.dto.AdminSettingsRequest;
+import com.example.squarespool.dto.AdminSettingsResponse;
 import com.example.squarespool.dto.ConfirmQuarterRequest;
 import com.example.squarespool.dto.CreateBoardRequest;
 import com.example.squarespool.dto.ScoreUpdateRequest;
@@ -8,6 +10,7 @@ import com.example.squarespool.model.Board;
 import com.example.squarespool.service.BoardService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +36,20 @@ public class AdminController {
                              @Valid @RequestBody CreateBoardRequest request) {
         validateToken(token);
         return boardService.createBoard(request);
+    }
+
+    @GetMapping("/settings")
+    public AdminSettingsResponse getSettings(@RequestHeader("X-Admin-Token") String token) {
+        validateToken(token);
+        return new AdminSettingsResponse(appProperties.isShowPurchaserNames());
+    }
+
+    @PostMapping("/settings")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateSettings(@RequestHeader("X-Admin-Token") String token,
+                               @Valid @RequestBody AdminSettingsRequest request) {
+        validateToken(token);
+        appProperties.setShowPurchaserNames(request.isShowPurchaserNames());
     }
 
     @PostMapping("/boards/{id}/start")
