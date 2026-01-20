@@ -22,6 +22,7 @@ springdoc:
 
 squares:
   reservationTtlSeconds: 30
+  clockTickMs: 1000
   adminToken: admin
   houseOnLock: true
   showPurchaserNames: false

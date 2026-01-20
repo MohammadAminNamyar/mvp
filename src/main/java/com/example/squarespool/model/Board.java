@@ -46,6 +46,9 @@ public class Board {
     private int homeScore;
     private int awayScore;
     private String gameClock;
+    private int gameClockSeconds;
+    private boolean gameClockRunning;
+    private Instant gameClockUpdatedAt;
 
     @Enumerated(EnumType.STRING)
     private Quarter currentQuarter = Quarter.Q1;
@@ -190,6 +193,30 @@ public class Board {
 
     public void setGameClock(String gameClock) {
         this.gameClock = gameClock;
+    }
+
+    public int getGameClockSeconds() {
+        return gameClockSeconds;
+    }
+
+    public void setGameClockSeconds(int gameClockSeconds) {
+        this.gameClockSeconds = gameClockSeconds;
+    }
+
+    public boolean isGameClockRunning() {
+        return gameClockRunning;
+    }
+
+    public void setGameClockRunning(boolean gameClockRunning) {
+        this.gameClockRunning = gameClockRunning;
+    }
+
+    public Instant getGameClockUpdatedAt() {
+        return gameClockUpdatedAt;
+    }
+
+    public void setGameClockUpdatedAt(Instant gameClockUpdatedAt) {
+        this.gameClockUpdatedAt = gameClockUpdatedAt;
     }
 
     public Quarter getCurrentQuarter() {

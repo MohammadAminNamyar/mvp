@@ -198,6 +198,7 @@ public class BoardService {
             throw new IllegalStateException("Not enough squares to activate");
         }
         board.setStatus(BoardStatus.STARTED);
+        startGameClock(board);
         if (appProperties.isHouseOnLock()) {
             List<Square> squares = squareRepository.findByBoardId(boardId);
             for (Square square : squares) {
@@ -229,7 +230,7 @@ public class BoardService {
         Board board = loadBoard(boardId);
         board.setHomeScore(homeScore);
         board.setAwayScore(awayScore);
-        board.setGameClock(gameClock);
+        applyGameClock(board, gameClock);
         boardRepository.save(board);
         broadcastSnapshot(boardId);
     }
@@ -264,6 +265,10 @@ public class BoardService {
         board.setColDigits(null);
         board.setHomeScore(0);
         board.setAwayScore(0);
+        board.setGameClock(null);
+        board.setGameClockSeconds(0);
+        board.setGameClockRunning(false);
+        board.setGameClockUpdatedAt(null);
         board.setCurrentQuarter(Quarter.Q1);
         board.getConfirmedQuarters().clear();
         boardRepository.save(board);
@@ -387,7 +392,7 @@ public class BoardService {
         snapshot.setStatus(board.getStatus());
         snapshot.setHomeScore(board.getHomeScore());
         snapshot.setAwayScore(board.getAwayScore());
-        snapshot.setGameClock(board.getGameClock());
+        snapshot.setGameClock(resolveGameClock(board));
         snapshot.setCurrentQuarter(board.getCurrentQuarter());
         snapshot.setConfirmedQuarters(board.getConfirmedQuarters());
         int purchasedCount = (int) squares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
@@ -408,6 +413,25 @@ public class BoardService {
         }
         snapshot.setSquares(squares.stream().map(this::toSquareSnapshot).toList());
         return snapshot;
+    }
+
+    public boolean tickGameClock(Board board, Instant now) {
+        if (!board.isGameClockRunning()) {
+            return false;
+        }
+        Instant lastUpdate = board.getGameClockUpdatedAt();
+        if (lastUpdate == null) {
+            board.setGameClockUpdatedAt(now);
+            return false;
+        }
+        long deltaSeconds = Math.max(0, java.time.Duration.between(lastUpdate, now).getSeconds());
+        if (deltaSeconds == 0) {
+            return false;
+        }
+        board.setGameClockSeconds(board.getGameClockSeconds() + (int) deltaSeconds);
+        board.setGameClockUpdatedAt(now);
+        board.setGameClock(formatClock(board.getGameClockSeconds()));
+        return true;
     }
 
     private void applyPrizeBreakdown(BoardSnapshot snapshot, Board board, int purchasedCount) {
@@ -433,6 +457,65 @@ public class BoardService {
             return 0;
         }
         return (int) Math.round(total * (percent / 100.0));
+    }
+
+    private void startGameClock(Board board) {
+        board.setGameClockSeconds(0);
+        board.setGameClock("00:00");
+        board.setGameClockRunning(true);
+        board.setGameClockUpdatedAt(Instant.now());
+    }
+
+    private void applyGameClock(Board board, String gameClock) {
+        String value = gameClock == null ? "" : gameClock.trim();
+        if (!value.isEmpty()) {
+            board.setGameClock(value);
+            board.setGameClockSeconds(parseClockSeconds(value));
+            board.setGameClockUpdatedAt(Instant.now());
+            board.setGameClockRunning(true);
+            return;
+        }
+        if (board.getGameClockUpdatedAt() == null) {
+            board.setGameClockUpdatedAt(Instant.now());
+        }
+        board.setGameClockRunning(true);
+    }
+
+    private String resolveGameClock(Board board) {
+        if (board.isGameClockRunning() && board.getGameClockUpdatedAt() != null) {
+            Instant now = Instant.now();
+            long deltaSeconds = Math.max(0, java.time.Duration.between(board.getGameClockUpdatedAt(), now).getSeconds());
+            int computed = board.getGameClockSeconds() + (int) deltaSeconds;
+            return formatClock(computed);
+        }
+        if (board.getGameClock() != null && !board.getGameClock().isBlank()) {
+            return board.getGameClock();
+        }
+        return formatClock(board.getGameClockSeconds());
+    }
+
+    private int parseClockSeconds(String clock) {
+        String value = clock.trim();
+        if (value.endsWith("'")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        String[] parts = value.split(":");
+        if (parts.length != 2) {
+            return 0;
+        }
+        try {
+            int minutes = Integer.parseInt(parts[0]);
+            int seconds = Integer.parseInt(parts[1]);
+            return Math.max(0, minutes * 60 + seconds);
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    private String formatClock(int totalSeconds) {
+        int minutes = Math.max(0, totalSeconds) / 60;
+        int seconds = Math.max(0, totalSeconds) % 60;
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
     private SquareSnapshot toSquareSnapshot(Square square) {

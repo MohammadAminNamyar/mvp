@@ -51,7 +51,8 @@
         scoreboardHomeScore: document.getElementById('scoreboard-home-score'),
         scoreboardClock: document.getElementById('scoreboard-clock'),
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
-        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo')
+        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
+        confettiLayer: document.getElementById('confetti-layer')
     };
 
     function fetchSnapshot() {
@@ -370,6 +371,7 @@
         }
         setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
+        triggerScoreCelebration();
         const prizes = [
             { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
             { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
@@ -396,6 +398,54 @@
         }
         element.src = '/placeholder-shield.svg';
         element.alt = teamName ? `${teamName} logo` : 'Team logo';
+    }
+
+    function triggerScoreCelebration() {
+        if (!previousSnapshot) {
+            return;
+        }
+        const awayDelta = snapshot.awayScore - previousSnapshot.awayScore;
+        const homeDelta = snapshot.homeScore - previousSnapshot.homeScore;
+        if (awayDelta > 0) {
+            celebrateTeam('away');
+        }
+        if (homeDelta > 0) {
+            celebrateTeam('home');
+        }
+    }
+
+    function celebrateTeam(side) {
+        const isAway = side === 'away';
+        const logo = isAway ? elements.scoreboardAwayLogo : elements.scoreboardHomeLogo;
+        const color = isAway ? '#ef4444' : '#3b82f6';
+        if (logo) {
+            logo.classList.remove('score-celebrate');
+            void logo.offsetWidth;
+            logo.style.setProperty('--glow-color', color);
+            logo.classList.add('score-celebrate');
+            setTimeout(() => {
+                logo.classList.remove('score-celebrate');
+            }, 2000);
+        }
+        spawnConfetti(color);
+    }
+
+    function spawnConfetti(color) {
+        const layer = elements.confettiLayer;
+        if (!layer) {
+            return;
+        }
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            const piece = document.createElement('span');
+            piece.className = 'confetti-piece';
+            piece.style.backgroundColor = color;
+            piece.style.left = `${Math.random() * 100}%`;
+            piece.style.animationDelay = `${Math.random() * 0.4}s`;
+            piece.style.animationDuration = `${2.1 + Math.random() * 0.7}s`;
+            layer.appendChild(piece);
+            setTimeout(() => piece.remove(), 3200);
+        }
     }
 
     elements.confirm.addEventListener('click', purchase);
