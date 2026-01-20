@@ -17,6 +17,8 @@ public interface SquareRepository extends JpaRepository<Square, Long> {
 
     long countByBoardIdAndStatus(Long boardId, SquareStatus status);
 
+    void deleteByBoardId(Long boardId);
+
     @Query("select s from Square s where s.status = 'RESERVED' and s.reservedUntil < :now")
     List<Square> findExpiredReservations(@Param("now") Instant now);
 }
