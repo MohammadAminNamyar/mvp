@@ -596,6 +596,52 @@ a {
     color: #f4f6ff;
 }
 
+.admin-board-list {
+    margin-top: 8px;
+    display: grid;
+    gap: 8px;
+}
+
+.admin-board-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.admin-board-card {
+    display: grid;
+    gap: 6px;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 18, 31, 0.7);
+    color: #f4f6ff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.admin-board-card:hover {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.35);
+    transform: translateY(-1px);
+}
+
+.admin-board-card.active {
+    border-color: rgba(59, 130, 246, 0.9);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.6);
+}
+
+.admin-board-title {
+    font-weight: 600;
+}
+
+.admin-board-status {
+    font-size: 12px;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
 .controls {
     margin-top: 12px;
 }

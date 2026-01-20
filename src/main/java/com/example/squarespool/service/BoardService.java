@@ -1,12 +1,14 @@
 package com.example.squarespool.service;
 
 import com.example.squarespool.config.AppProperties;
+import com.example.squarespool.dto.AdminBoardResponse;
 import com.example.squarespool.dto.BoardSnapshot;
 import com.example.squarespool.dto.BoardSummaryResponse;
 import com.example.squarespool.dto.CreateBoardRequest;
 import com.example.squarespool.dto.GameOptionResponse;
 import com.example.squarespool.dto.PurchaseRequest;
 import com.example.squarespool.dto.SportOptionResponse;
+import com.example.squarespool.dto.UpdateBoardRequest;
 import com.example.squarespool.dto.SquareSnapshot;
 import com.example.squarespool.model.Board;
 import com.example.squarespool.model.BoardStatus;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -71,6 +74,46 @@ public class BoardService {
     @Transactional(readOnly = true)
     public List<Board> listBoards() {
         return boardRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminBoardResponse> listBoardsForAdmin() {
+        return boardRepository.findAll().stream()
+                .sorted(Comparator.comparing(Board::getCreatedAt).reversed())
+                .map(AdminBoardResponse::new)
+                .toList();
+    }
+
+    @Transactional
+    public Board updateBoard(Long boardId, UpdateBoardRequest request) {
+        Board board = loadBoard(boardId);
+        String normalizedSport = normalizeSport(request.getSportType());
+        String normalizedGame = normalizeGameName(request.getGameName(), request.getHomeTeam(), request.getAwayTeam());
+        String currentSport = normalizeSport(board.getSportType());
+        String currentGame = normalizeGameName(board.getGameName(), board.getHomeTeam(), board.getAwayTeam());
+        boolean keyChanged = !currentSport.equalsIgnoreCase(normalizedSport)
+                || !currentGame.equalsIgnoreCase(normalizedGame)
+                || board.getPriceCents() != request.getPriceCents();
+        if (keyChanged) {
+            board.setBoardNumber(nextBoardNumber(normalizedSport, normalizedGame, request.getPriceCents()));
+        }
+        board.setName(request.getName());
+        board.setHomeTeam(request.getHomeTeam());
+        board.setAwayTeam(request.getAwayTeam());
+        board.setSportType(normalizedSport);
+        board.setGameName(normalizedGame);
+        board.setPriceCents(request.getPriceCents());
+        board.setHousePercent(request.getHousePercent());
+        board.setMinSquaresToActivate(request.getMinSquaresToActivate());
+        Board saved = boardRepository.save(board);
+        broadcastSnapshot(saved.getId());
+        return saved;
+    }
+
+    @Transactional
+    public void deleteBoard(Long boardId) {
+        squareRepository.deleteByBoardId(boardId);
+        boardRepository.deleteById(boardId);
     }
 
     @Transactional(readOnly = true)
