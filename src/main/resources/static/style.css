@@ -215,6 +215,17 @@ a {
     letter-spacing: 0.4px;
 }
 
+.grid th.vertical-team {
+    width: 36px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 2px;
+}
+
+.grid th.row-digit-corner {
+    background: rgba(16, 19, 30, 0.9);
+}
+
 .grid th.digit-header {
     background: rgba(44, 52, 78, 0.9);
     color: #facc15;
@@ -223,6 +234,10 @@ a {
 .grid th.row-header {
     font-weight: 600;
     letter-spacing: 0.3px;
+}
+
+.grid th.hidden-digit {
+    color: rgba(250, 204, 21, 0.45);
 }
 
 .square.empty {
