@@ -20,12 +20,44 @@
         return `$${(option.cents / 100).toFixed(0)}`;
     }
 
+    function updateSlidingPill() {
+        const activeButton = sportList.querySelector('.sport-button.active');
+        const slider = sportList.querySelector('.sport-slider');
+        
+        if (!activeButton || !slider) return;
+        
+        const containerRect = sportList.getBoundingClientRect();
+        const buttonRect = activeButton.getBoundingClientRect();
+        
+        const left = buttonRect.left - containerRect.left;
+        const width = buttonRect.width;
+        
+        slider.style.transform = `translateX(${left}px)`;
+        slider.style.width = `${width}px`;
+    }
+
     function renderSports(sports) {
+        // Find the index of the previously selected sport
+        const oldActiveButton = sportList.querySelector('.sport-button.active');
+        let previousSportIndex = -1;
+        if (oldActiveButton) {
+            const previousSport = oldActiveButton.textContent;
+            previousSportIndex = sports.indexOf(previousSport);
+        }
+        
         sportList.innerHTML = '';
         if (!sports.length) {
             sportList.innerHTML = '<p class="muted">No sports are available yet.</p>';
             return;
         }
+        
+        // Create sliding pill element
+        const slider = document.createElement('div');
+        slider.className = 'sport-slider';
+        sportList.appendChild(slider);
+        
+        // First, create all buttons to measure their natural widths
+        const buttons = [];
         sports.forEach(sport => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -40,6 +72,61 @@
                 loadGames();
             });
             sportList.appendChild(button);
+            buttons.push(button);
+        });
+        
+        // Calculate maximum width and apply to all buttons
+        requestAnimationFrame(() => {
+            let maxWidth = 0;
+            buttons.forEach(button => {
+                const width = button.getBoundingClientRect().width;
+                if (width > maxWidth) {
+                    maxWidth = width;
+                }
+            });
+            
+            // Apply the maximum width to all buttons
+            buttons.forEach(button => {
+                button.style.width = `${maxWidth}px`;
+            });
+            
+            // Wait for layout to settle, then handle animation
+            requestAnimationFrame(() => {
+                // If we had a previous selection, set slider to that button's position first (without transition)
+                if (previousSportIndex >= 0 && previousSportIndex < buttons.length) {
+                    const previousButton = buttons[previousSportIndex];
+                    const containerRect = sportList.getBoundingClientRect();
+                    const buttonRect = previousButton.getBoundingClientRect();
+                    const oldLeft = buttonRect.left - containerRect.left;
+                    const oldWidth = buttonRect.width;
+                    
+                    slider.style.transition = 'none';
+                    slider.style.transform = `translateX(${oldLeft}px)`;
+                    slider.style.width = `${oldWidth}px`;
+                    
+                    // Force a reflow to ensure the initial position is set
+                    slider.offsetHeight;
+                    
+                    // Re-enable transition and animate to new position
+                    requestAnimationFrame(() => {
+                        slider.style.transition = '';
+                        updateSlidingPill();
+                    });
+                } else {
+                    // First render, no animation needed
+                    updateSlidingPill();
+                }
+                
+                // Scroll active button into view, then update pill position again
+                const activeButton = sportList.querySelector('.sport-button.active');
+                if (activeButton) {
+                    activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    // Update pill position after scroll animation completes
+                    setTimeout(() => {
+                        updateSlidingPill();
+                    }, 300);
+                }
+            });
         });
     }
 
@@ -49,84 +136,236 @@
     }
 
     function renderGames(games) {
-        gamesList.innerHTML = '';
-        if (!games.length) {
-            renderEmptyGamesMessage();
-            return;
+        const hasExistingContent = gamesList.children.length > 0;
+        
+        if (hasExistingContent) {
+            // Fade out existing content
+            gamesList.classList.add('fade-out');
         }
-        games.forEach(game => {
-            const card = document.createElement('div');
-            card.className = 'game-card';
+        
+        // Wait for fade out (if needed), then update content and fade in
+        const updateContent = () => {
+            gamesList.innerHTML = '';
+            // Start with content hidden
+            gamesList.classList.remove('fade-in');
+            gamesList.classList.add('fade-out');
+            
+            if (!games.length) {
+                renderEmptyGamesMessage();
+            } else {
+                games.forEach((game, index) => {
+                    // Create VS banner for this game
+                    const vsBanner = document.createElement('div');
+                    vsBanner.className = 'games-vs-banner';
+                    vsBanner.setAttribute('data-game-id', game.gameId || `game-${index}`);
+                    vsBanner.innerHTML = `
+                        <div class="vs-team vs-team-away">
+                            <div class="vs-team-name">${game.awayTeam}</div>
+                            <div class="vs-team-label">AWAY</div>
+                        </div>
+                        <div class="vs-divider">
+                            <span class="vs-text">VS</span>
+                        </div>
+                        <div class="vs-team vs-team-home">
+                            <div class="vs-team-name">${game.homeTeam}</div>
+                            <div class="vs-team-label">HOME</div>
+                        </div>
+                    `;
+                    gamesList.appendChild(vsBanner);
 
-            const header = document.createElement('div');
-            header.className = 'game-header';
-            header.innerHTML = `
-                <div>
-                    <h3>${game.name}</h3>
-                    <p class="muted small">${game.awayTeam} at ${game.homeTeam}</p>
-                </div>
-            `;
+                    // Add date below the VS banner
+                    const vsDate = document.createElement('div');
+                    vsDate.className = 'vs-date';
+                    vsDate.textContent = '03 - March - 2026';
+                    gamesList.appendChild(vsDate);
 
-            const betRow = document.createElement('div');
-            betRow.className = 'bet-row';
-            const betLabel = document.createElement('span');
-            betLabel.className = 'muted small';
-            betLabel.textContent = 'Select bet amount:';
-            betRow.appendChild(betLabel);
+                    // Create a wrapper to ensure proper isolation
+                    const card = document.createElement('div');
+                    card.className = 'game-card';
+                    card.setAttribute('data-game-id', game.gameId || index);
+                    card.setAttribute('data-game-index', index);
+                    // Stagger animation for each card
+                    card.style.animationDelay = `${index * 0.1}s`;
 
-            const betButtons = document.createElement('div');
-            betButtons.className = 'bet-buttons';
+                    // Create content area
+                    const contentArea = document.createElement('div');
+                    contentArea.className = 'game-content';
 
-            const boardsContainer = document.createElement('div');
-            boardsContainer.className = 'boards-container';
+                    const betRow = document.createElement('div');
+                    betRow.className = 'bet-row';
+                    const betLabel = document.createElement('span');
+                    betLabel.className = 'muted small';
+                    betLabel.textContent = 'Select bet amount:';
+                    betRow.appendChild(betLabel);
 
-            betRow.appendChild(betButtons);
-            card.appendChild(header);
-            card.appendChild(betRow);
-            card.appendChild(boardsContainer);
-            gamesList.appendChild(card);
+                    const betButtons = document.createElement('div');
+                    betButtons.className = 'bet-buttons';
+                    betButtons.setAttribute('data-game-id', game.gameId || `game-${index}`);
 
-            loadBetOptions(game, betButtons, boardsContainer);
-        });
+                    const boardsContainer = document.createElement('div');
+                    boardsContainer.className = 'boards-container';
+                    boardsContainer.setAttribute('data-game-id', game.gameId || `game-${index}`);
+
+                    betRow.appendChild(betButtons);
+                    contentArea.appendChild(betRow);
+                    contentArea.appendChild(boardsContainer);
+                    
+                    card.appendChild(contentArea);
+                    gamesList.appendChild(card);
+
+                    // Use a closure to ensure each game uses its own containers
+                    // Store gameId for verification
+                    const gameId = game.gameId || `game-${index}`;
+                    (function(currentGame, currentGameId, currentBetButtons, currentBoardsContainer) {
+                        loadBetOptions(currentGame, currentGameId, currentBetButtons, currentBoardsContainer);
+                    })(game, gameId, betButtons, boardsContainer);
+                });
+            }
+            
+            // Force a reflow, then fade in new content
+            gamesList.offsetHeight;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    gamesList.classList.remove('fade-out');
+                    gamesList.classList.add('fade-in');
+                });
+            });
+        };
+        
+        if (hasExistingContent) {
+            setTimeout(updateContent, 150);
+        } else {
+            updateContent();
+        }
     }
 
-    function renderBoards(boards, container) {
-        container.innerHTML = '';
-        if (!boards.length) {
-            container.innerHTML = '<p class="muted">No boards for this bet level yet.</p>';
+    function renderBoards(boards, container, expectedGameId) {
+        // Verify container before rendering
+        if (expectedGameId && container.getAttribute('data-game-id') !== expectedGameId) {
+            console.error('renderBoards: Container mismatch!', { expectedGameId, currentId: container.getAttribute('data-game-id') });
             return;
         }
-        const list = document.createElement('div');
-        list.className = 'board-list';
-        boards.forEach(board => {
-            const item = document.createElement('a');
-            item.href = `/boards/${board.id}/view`;
-            item.className = 'board-row';
-            item.innerHTML = `
-                <div>
-                    <strong>${board.name}</strong>
-                    <span class="muted small">Open squares: ${board.openSquares}</span>
-                </div>
-                <span class="status-pill ${board.full ? 'danger' : 'success'}">
-                    ${board.full ? 'Full' : 'Open'}
-                </span>
-            `;
-            list.appendChild(item);
-        });
-        container.appendChild(list);
+
+        const hasExistingContent = container.children.length > 0;
+        
+        if (hasExistingContent) {
+            // Fade out existing content
+            container.classList.add('fade-out');
+        }
+        
+        const updateContent = () => {
+            // Final verification before updating
+            if (expectedGameId && container.getAttribute('data-game-id') !== expectedGameId) {
+                console.error('renderBoards: Container changed during update!', { expectedGameId, currentId: container.getAttribute('data-game-id') });
+                return;
+            }
+
+            container.innerHTML = '';
+            // Start with content hidden
+            container.classList.remove('fade-in');
+            container.classList.add('fade-out');
+            
+            if (!boards.length) {
+                container.innerHTML = '<p class="muted">No boards for this bet level yet.</p>';
+            } else {
+                const list = document.createElement('div');
+                list.className = 'board-list';
+                boards.forEach((board, index) => {
+                    const isLastBoard = index === boards.length - 1;
+                    const isOpen = isLastBoard;
+                    const item = document.createElement('a');
+                    item.href = `/boards/${board.id}/view`;
+                    item.className = 'board-row';
+                    if (!isOpen) {
+                        item.classList.add('board-full');
+                    }
+                    // Stagger animation for each board
+                    item.style.animationDelay = `${index * 0.05}s`;
+                    item.innerHTML = `
+                        <div>
+                            <strong>${board.name}</strong>
+                            <span class="muted small">Open squares: ${board.openSquares}</span>
+                        </div>
+                        <span class="status-pill ${isOpen ? 'success' : 'danger'}">
+                            ${isOpen ? 'Open' : 'Full'}
+                        </span>
+                    `;
+                    list.appendChild(item);
+                });
+                container.appendChild(list);
+            }
+            
+            // Force a reflow, then fade in new content
+            container.offsetHeight;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    container.classList.remove('fade-out');
+                    container.classList.add('fade-in');
+                });
+            });
+        };
+        
+        if (hasExistingContent) {
+            setTimeout(updateContent, 150);
+        } else {
+            updateContent();
+        }
     }
 
-    function loadBoards(gameId, betCents, container) {
+    function loadBoards(gameId, betCents, container, expectedGameId) {
+        // Verify container matches expected game
+        const containerGameId = container.getAttribute('data-game-id');
+        if (expectedGameId && containerGameId !== expectedGameId) {
+            console.error('loadBoards: Container mismatch!', { gameId, expectedGameId, containerGameId });
+            return;
+        }
+
         fetchJson(`/api/lobby/games/${encodeURIComponent(gameId)}/boards?betCents=${betCents}`)
-            .then(boards => renderBoards(boards, container))
+            .then(boards => {
+                // Final check before rendering
+                if (expectedGameId && container.getAttribute('data-game-id') !== expectedGameId) {
+                    console.error('loadBoards: Container changed before render!', { gameId, expectedGameId, currentId: container.getAttribute('data-game-id') });
+                    return;
+                }
+                renderBoards(boards, container, expectedGameId);
+            })
             .catch(() => {
-                container.innerHTML = '<p class="muted">Unable to load boards right now.</p>';
+                if (expectedGameId && container.getAttribute('data-game-id') !== expectedGameId) {
+                    return;
+                }
+                const hasExistingContent = container.children.length > 0;
+                if (hasExistingContent) {
+                    container.classList.add('fade-out');
+                    setTimeout(() => {
+                        if (container.getAttribute('data-game-id') === expectedGameId) {
+                            container.innerHTML = '<p class="muted">Unable to load boards right now.</p>';
+                            container.classList.remove('fade-out');
+                            container.classList.add('fade-in');
+                        }
+                    }, 150);
+                } else {
+                    container.innerHTML = '<p class="muted">Unable to load boards right now.</p>';
+                }
             });
     }
 
-    function loadBetOptions(game, betButtons, boardsContainer) {
+    function loadBetOptions(game, gameId, betButtons, boardsContainer) {
+        // Verify we're using the correct container
+        const expectedGameId = gameId;
+        const containerGameId = boardsContainer.getAttribute('data-game-id');
+        if (containerGameId !== expectedGameId) {
+            console.error('Container mismatch!', { expectedGameId, containerGameId });
+            return;
+        }
+
         fetchJson(`/api/lobby/games/${encodeURIComponent(game.gameId)}/bets`)
             .then(options => {
+                // Double-check container is still correct
+                if (boardsContainer.getAttribute('data-game-id') !== expectedGameId) {
+                    console.error('Container changed during async operation!', { expectedGameId, currentId: boardsContainer.getAttribute('data-game-id') });
+                    return;
+                }
+
                 betButtons.innerHTML = '';
                 if (!options.length) {
                     boardsContainer.innerHTML = '<p class="muted">No bet amounts configured for this game.</p>';
@@ -138,31 +377,47 @@
                     betButton.className = 'bet-button';
                     betButton.textContent = formatBetLabel(option);
                     betButton.addEventListener('click', () => {
+                        // Verify container before loading boards
+                        if (boardsContainer.getAttribute('data-game-id') !== expectedGameId) {
+                            console.error('Container mismatch on click!', { expectedGameId, currentId: boardsContainer.getAttribute('data-game-id') });
+                            return;
+                        }
                         betButtons.querySelectorAll('.bet-button').forEach(btn => btn.classList.remove('active'));
                         betButton.classList.add('active');
-                        loadBoards(game.gameId, option.cents, boardsContainer);
+                        loadBoards(game.gameId, option.cents, boardsContainer, expectedGameId);
                     });
                     if (index === 0) {
                         betButton.classList.add('active');
                     }
                     betButtons.appendChild(betButton);
                 });
-                loadBoards(game.gameId, options[0].cents, boardsContainer);
+                loadBoards(game.gameId, options[0].cents, boardsContainer, expectedGameId);
             })
             .catch(() => {
-                boardsContainer.innerHTML = '<p class="muted">Unable to load bet options right now.</p>';
+                if (boardsContainer.getAttribute('data-game-id') === expectedGameId) {
+                    boardsContainer.innerHTML = '<p class="muted">Unable to load bet options right now.</p>';
+                }
             });
     }
 
     function loadGames() {
         if (!selectedSport) {
-            gamesList.innerHTML = '';
+            gamesList.classList.add('fade-out');
+            setTimeout(() => {
+                gamesList.innerHTML = '';
+                gamesList.classList.remove('fade-out');
+            }, 150);
             return;
         }
         fetchJson(`/api/lobby/sports/${encodeURIComponent(selectedSport)}/games`)
             .then(renderGames)
             .catch(() => {
-                renderEmptyGamesMessage();
+                gamesList.classList.add('fade-out');
+                setTimeout(() => {
+                    renderEmptyGamesMessage();
+                    gamesList.classList.remove('fade-out');
+                    gamesList.classList.add('fade-in');
+                }, 150);
             });
     }
 
@@ -179,6 +434,20 @@
                 renderSports([]);
                 renderEmptyGamesMessage();
             });
+        
+        // Update pill position on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                updateSlidingPill();
+            }, 100);
+        });
+        
+        // Update pill position on scroll
+        sportList.addEventListener('scroll', () => {
+            updateSlidingPill();
+        });
     }
 
     init();
