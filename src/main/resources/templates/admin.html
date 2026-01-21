@@ -17,6 +17,7 @@
         </div>
         <nav class="nav-actions">
             <a class="nav-link" href="/">Back to Lobby</a>
+            <a class="nav-link" href="#" id="logout-nav">Logout</a>
         </nav>
     </header>
 
@@ -87,5 +88,20 @@
 </div>
 
 <script src="/admin.js"></script>
+<script>
+    (function () {
+        const logoutNav = document.getElementById('logout-nav');
+        if (!logoutNav) {
+            return;
+        }
+        logoutNav.addEventListener('click', event => {
+            event.preventDefault();
+            localStorage.removeItem('squares.username');
+            localStorage.removeItem('squares.serviceTicket');
+            localStorage.removeItem('squares.role');
+            window.location.href = '/';
+        });
+    })();
+</script>
 </body>
 </html>
