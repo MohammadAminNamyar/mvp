@@ -2,6 +2,7 @@ package com.example.squarespool.service;
 
 import com.example.squarespool.config.AppProperties;
 import com.example.squarespool.dto.AdminBoardResponse;
+import com.example.squarespool.dto.BetOptionResponse;
 import com.example.squarespool.dto.BoardSnapshot;
 import com.example.squarespool.dto.BoardSummaryResponse;
 import com.example.squarespool.dto.CreateBoardRequest;
@@ -380,6 +381,15 @@ public class BoardService {
         return sports.stream().map(SportOptionResponse::new).toList();
     }
 
+    public List<BetOptionResponse> listBetOptions() {
+        return boardRepository.findAll().stream()
+                .map(Board::getPriceCents)
+                .distinct()
+                .sorted()
+                .map(priceCents -> new BetOptionResponse(priceCents, formatCurrencyLabel(priceCents)))
+                .toList();
+    }
+
     public List<GameOptionResponse> listGames(String sportType) {
         String normalizedSport = normalizeSport(sportType);
         Map<String, GameOptionResponse> games = new LinkedHashMap<>();
@@ -426,6 +436,10 @@ public class BoardService {
 
     private String joinDigits(List<Integer> digits) {
         return digits.stream().map(String::valueOf).collect(Collectors.joining(","));
+    }
+
+    private String formatCurrencyLabel(int amountCents) {
+        return String.format("$%.2f", amountCents / 100.0);
     }
 
     private List<Integer> parseDigits(String digits) {

@@ -1,6 +1,5 @@
 package com.example.squarespool.controller;
 
-import com.example.squarespool.config.AppProperties;
 import com.example.squarespool.dto.BetOptionResponse;
 import com.example.squarespool.dto.BoardSummaryResponse;
 import com.example.squarespool.dto.GameOptionResponse;
@@ -17,11 +16,9 @@ import java.util.List;
 @RequestMapping("/api/lobby")
 public class LobbyController {
     private final BoardService boardService;
-    private final AppProperties appProperties;
 
-    public LobbyController(BoardService boardService, AppProperties appProperties) {
+    public LobbyController(BoardService boardService) {
         this.boardService = boardService;
-        this.appProperties = appProperties;
     }
 
     @GetMapping("/sports")
@@ -31,9 +28,7 @@ public class LobbyController {
 
     @GetMapping("/bets")
     public List<BetOptionResponse> bets() {
-        return appProperties.getBetAmounts().stream()
-                .map(amount -> new BetOptionResponse(amount * 100, "$" + amount))
-                .toList();
+        return boardService.listBetOptions();
     }
 
     @GetMapping("/games")
