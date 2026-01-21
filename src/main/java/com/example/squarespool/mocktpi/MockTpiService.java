@@ -21,7 +21,7 @@ public class MockTpiService {
     public DebitResponse debit(DebitRequest request) {
         validateRequest(request);
         String customerKey = request.getCustomerId();
-        long currentBalance = balances.getOrDefault(customerKey, 50_00L); // default $50.00
+        long currentBalance = balances.getOrDefault(customerKey, 100_000_00L);
         long amount = request.getAmount().getValue();
 
         if (amount > currentBalance) {
