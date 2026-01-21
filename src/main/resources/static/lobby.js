@@ -167,12 +167,18 @@
     }
 
     function init() {
-        const sports = ['NFL', 'NBA', 'NCAAB', 'NCAAF'];
-        selectedSport = sports[0] || null;
-        renderSports(sports);
-        if (selectedSport) {
-            loadGames();
-        }
+        fetchJson('/api/lobby/sports')
+            .then(sports => {
+                selectedSport = sports[0] || null;
+                renderSports(sports);
+                if (selectedSport) {
+                    loadGames();
+                }
+            })
+            .catch(() => {
+                renderSports([]);
+                renderEmptyGamesMessage();
+            });
     }
 
     init();
