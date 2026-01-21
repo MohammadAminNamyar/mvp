@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -356,7 +357,7 @@ public class BoardService {
     if (appProperties.isRolloverOnNoWinner() && rollover > 0) {
       prizeCents += rollover;
       board.setRolloverCents(0);
-      board.setLastRolloverQuarter(null);
+      board.getRolloverQuarters().clear();
     }
     boolean playerWinner =
         winner.getStatus() == SquareStatus.TAKEN
@@ -364,14 +365,18 @@ public class BoardService {
             && !winner.getOwnerName().equalsIgnoreCase("HOUSE");
     if (playerWinner) {
       recordPayout(board, quarter, prizeCents, winnerIdx, winner.getOwnerName());
-      board.setLastRolloverQuarter(null);
-    } else if (appProperties.isRolloverOnNoWinner() && quarter != Quarter.Q4) {
-      board.setRolloverCents(prizeCents);
-      board.setLastRolloverQuarter(quarter);
-      recordRollover(board, quarter, prizeCents, winnerIdx);
+    } else if (appProperties.isRolloverOnNoWinner()) {
+      if (quarter == Quarter.Q4) {
+        recordRefunds(board, prizeCents);
+        board.setRolloverCents(0);
+        board.getRolloverQuarters().clear();
+      } else {
+        board.setRolloverCents(board.getRolloverCents() + prizeCents);
+        board.getRolloverQuarters().add(quarter);
+        recordRollover(board, quarter, prizeCents, winnerIdx);
+      }
     } else {
       recordPayout(board, quarter, prizeCents, winnerIdx, "HOUSE");
-      board.setLastRolloverQuarter(null);
     }
     switch (quarter) {
       case Q1 -> winner.setWonQ1(true);
@@ -402,7 +407,7 @@ public class BoardService {
         board.setGameClockRunning(false);
         board.setGameClockUpdatedAt(null);
         board.setRolloverCents(0);
-        board.setLastRolloverQuarter(null);
+        board.getRolloverQuarters().clear();
         board.setCurrentQuarter(Quarter.Q1);
         board.getConfirmedQuarters().clear();
         boardRepository.save(board);
@@ -567,7 +572,7 @@ public class BoardService {
         snapshot.setConfirmedQuarters(board.getConfirmedQuarters());
         snapshot.setRolloverOnNoWinner(appProperties.isRolloverOnNoWinner());
         snapshot.setRolloverCents(board.getRolloverCents());
-        snapshot.setLastRolloverQuarter(board.getLastRolloverQuarter());
+        snapshot.setRolloverQuarters(board.getRolloverQuarters());
         int purchasedCount = (int) squares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
         snapshot.setPurchasedCount(purchasedCount);
         snapshot.setActive(purchasedCount >= board.getMinSquaresToActivate());
@@ -651,7 +656,7 @@ public class BoardService {
         };
     }
 
-    private void recordPayout(Board board, Quarter quarter, int amountCents, int winnerIdx, String recipient) {
+    private void recordPayout(Board board, Quarter quarter, int amountCents, Integer winnerIdx, String recipient) {
         PayoutEvent event = new PayoutEvent();
         event.setBoard(board);
         event.setQuarter(quarter);
@@ -660,6 +665,64 @@ public class BoardService {
         event.setAmountCents(amountCents);
         event.setWinnerSquareIdx(winnerIdx);
         payoutEventRepository.save(event);
+    }
+
+    private void recordRefunds(Board board, int amountCents) {
+        if (amountCents <= 0) {
+            return;
+        }
+        List<Square> squares = squareRepository.findByBoardId(board.getId());
+        Map<String, Integer> counts = new HashMap<>();
+        for (Square square : squares) {
+            if (square.getStatus() != SquareStatus.TAKEN) {
+                continue;
+            }
+            String owner = square.getOwnerName();
+            if (owner == null || owner.isBlank() || owner.equalsIgnoreCase("HOUSE")) {
+                continue;
+            }
+            counts.merge(owner, 1, Integer::sum);
+        }
+        int total = counts.values().stream().mapToInt(Integer::intValue).sum();
+        if (total == 0) {
+            recordPayout(board, Quarter.Q4, amountCents, null, "HOUSE");
+            return;
+        }
+        class Share {
+            final String owner;
+            final int amount;
+            final int remainder;
+            Share(String owner, int amount, int remainder) {
+                this.owner = owner;
+                this.amount = amount;
+                this.remainder = remainder;
+            }
+        }
+        List<Share> shares = new ArrayList<>();
+        int allocated = 0;
+        for (Map.Entry<String, Integer> entry : counts.entrySet()) {
+            long numerator = (long) amountCents * entry.getValue();
+            int share = (int) (numerator / total);
+            int remainder = (int) (numerator % total);
+            allocated += share;
+            shares.add(new Share(entry.getKey(), share, remainder));
+        }
+        int leftover = amountCents - allocated;
+        shares.sort(Comparator.<Share>comparingInt(s -> s.remainder).reversed()
+                .thenComparing(s -> s.owner));
+        int index = 0;
+        while (leftover > 0 && !shares.isEmpty()) {
+            Share share = shares.get(index);
+            shares.set(index, new Share(share.owner, share.amount + 1, share.remainder));
+            leftover--;
+            index = (index + 1) % shares.size();
+        }
+        for (Share share : shares) {
+            if (share.amount <= 0) {
+                continue;
+            }
+            recordPayout(board, Quarter.Q4, share.amount, null, share.owner);
+        }
     }
 
     private void recordRollover(Board board, Quarter quarter, int amountCents, int winnerIdx) {

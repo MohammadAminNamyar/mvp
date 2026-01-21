@@ -53,8 +53,10 @@ public class Board {
     private boolean gameClockRunning;
     private Instant gameClockUpdatedAt;
     private int rolloverCents;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "board_rollover_quarters", joinColumns = @JoinColumn(name = "board_id"))
     @Enumerated(EnumType.STRING)
-    private Quarter lastRolloverQuarter;
+    private Set<Quarter> rolloverQuarters = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private Quarter currentQuarter = Quarter.Q1;
@@ -257,12 +259,12 @@ public class Board {
         this.rolloverCents = rolloverCents;
     }
 
-    public Quarter getLastRolloverQuarter() {
-        return lastRolloverQuarter;
+    public Set<Quarter> getRolloverQuarters() {
+        return rolloverQuarters;
     }
 
-    public void setLastRolloverQuarter(Quarter lastRolloverQuarter) {
-        this.lastRolloverQuarter = lastRolloverQuarter;
+    public void setRolloverQuarters(Set<Quarter> rolloverQuarters) {
+        this.rolloverQuarters = rolloverQuarters;
     }
 
     public Quarter getCurrentQuarter() {

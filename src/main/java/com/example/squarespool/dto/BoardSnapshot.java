@@ -26,7 +26,7 @@ public class BoardSnapshot {
     private Set<Quarter> confirmedQuarters;
     private boolean rolloverOnNoWinner;
     private int rolloverCents;
-    private Quarter lastRolloverQuarter;
+    private Set<Quarter> rolloverQuarters;
     private boolean digitsRevealed;
     private List<Integer> rowDigits;
     private List<Integer> colDigits;
@@ -192,12 +192,12 @@ public class BoardSnapshot {
         this.rolloverCents = rolloverCents;
     }
 
-    public Quarter getLastRolloverQuarter() {
-        return lastRolloverQuarter;
+    public Set<Quarter> getRolloverQuarters() {
+        return rolloverQuarters;
     }
 
-    public void setLastRolloverQuarter(Quarter lastRolloverQuarter) {
-        this.lastRolloverQuarter = lastRolloverQuarter;
+    public void setRolloverQuarters(Set<Quarter> rolloverQuarters) {
+        this.rolloverQuarters = rolloverQuarters;
     }
 
     public boolean isDigitsRevealed() {

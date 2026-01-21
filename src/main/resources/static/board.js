@@ -434,20 +434,19 @@
         prizes.forEach(prize => {
             result[prize.key] = { cents: prize.cents, vacant: false };
         });
-        if (!snapshot.rolloverOnNoWinner || !snapshot.lastRolloverQuarter || !snapshot.rolloverCents) {
+        if (!snapshot.rolloverOnNoWinner || !snapshot.rolloverCents) {
             return result;
         }
-        const next = nextQuarter(snapshot.lastRolloverQuarter);
-        if (!next) {
-            return result;
+        if (result.Q4) {
+            result.Q4.cents += snapshot.rolloverCents;
         }
-        if (result[snapshot.lastRolloverQuarter]) {
-            result[snapshot.lastRolloverQuarter].cents = 0;
-            result[snapshot.lastRolloverQuarter].vacant = true;
-        }
-        if (result[next]) {
-            result[next].cents += snapshot.rolloverCents;
-        }
+        const rolloverQuarters = snapshot.rolloverQuarters || [];
+        rolloverQuarters.forEach(quarter => {
+            if (result[quarter]) {
+                result[quarter].cents = 0;
+                result[quarter].vacant = true;
+            }
+        });
         return result;
     }
 
