@@ -347,6 +347,7 @@ public class BoardService {
       square.setStatus(SquareStatus.TAKEN);
       square.setOwnerName(customer.getDisplayName());
       square.setOwnerSessionId(request.getSessionId());
+      square.setTpiCustomerId(customer.getCustomerId());
       square.setReservedBySessionId(null);
       square.setReservedUntil(null);
     }
@@ -430,6 +431,7 @@ public class BoardService {
             && !winner.getOwnerName().equalsIgnoreCase("HOUSE");
     if (playerWinner) {
       recordPayout(board, quarter, prizeCents, winnerIdx, winner.getOwnerName());
+      creditWinner(board, winner, quarter, prizeCents);
     } else if (appProperties.isRolloverOnNoWinner()) {
       if (quarter == Quarter.Q4) {
         recordRefunds(board, prizeCents);
@@ -484,6 +486,7 @@ public class BoardService {
       square.setOwnerSessionId(null);
       square.setReservedBySessionId(null);
       square.setReservedUntil(null);
+      square.setTpiCustomerId(null);
       square.setWonQ1(false);
       square.setWonQ2(false);
       square.setWonQ3(false);
@@ -864,6 +867,26 @@ public class BoardService {
         };
     }
 
+    private void creditWinner(Board board, Square winner, Quarter quarter, int amountCents) {
+        if (amountCents <= 0) {
+            log.info("Skipping TPI credit: zero payout for board {} quarter {}", board.getId(), quarter);
+            return;
+        }
+        if (winner.getTpiCustomerId() == null || winner.getTpiCustomerId().isBlank()) {
+            log.warn("Skipping TPI credit: missing customer id for winner square {} on board {}", winner.getIdx(), board.getId());
+            return;
+        }
+        DebitRequest creditRequest = buildCreditRequest(board, winner, amountCents);
+        log.info("TPI credit start board={} quarter={} square={} customer={} amountCents={}", board.getId(), quarter, winner.getIdx(), winner.getTpiCustomerId(), amountCents);
+        DebitResponse response = tpiClient.credit(creditRequest);
+        if (response.getResponseCode() != null && response.getResponseCode() != 0) {
+            String message = response.getResponseMessage() != null ? response.getResponseMessage() : "Credit declined";
+            log.warn("TPI credit declined board={} quarter={} square={} code={} message={}", board.getId(), quarter, winner.getIdx(), response.getResponseCode(), message);
+            return;
+        }
+        log.info("TPI credit success board={} quarter={} square={} transactionId={} balance={}", board.getId(), quarter, winner.getIdx(), response.getAleaTransactionId(), response.getAleaAccountBalance() != null ? response.getAleaAccountBalance().getValue() : null);
+    }
+
     private void recordPayout(Board board, Quarter quarter, int amountCents, Integer winnerIdx, String recipient) {
         PayoutEvent event = new PayoutEvent();
         event.setBoard(board);
@@ -1119,6 +1142,19 @@ public class BoardService {
     debitRequest.setThirdPartyTransactionId(UUID.randomUUID().toString());
     debitRequest.setThirdPartyRoundId(String.valueOf(board.getId()));
     debitRequest.setCustomerId(request.getSessionId());
+    debitRequest.setGameTypeId(tpiProperties.getGameTypeId());
+    debitRequest.setGameTypeVariationId(tpiProperties.getGameTypeVariationId());
+    debitRequest.setAmount(new MoneyAmount(tpiProperties.getCurrency(), amountCents));
+    debitRequest.setRoundToBeClosed(tpiProperties.isRoundToBeClosed());
+    return debitRequest;
+  }
+
+  private DebitRequest buildCreditRequest(Board board, Square winner, long amountCents) {
+    DebitRequest debitRequest = new DebitRequest();
+    debitRequest.setThirdPartyTransactionTypeId(tpiProperties.getThirdPartyTransactionTypeId());
+    debitRequest.setThirdPartyTransactionId("credit-" + UUID.randomUUID());
+    debitRequest.setThirdPartyRoundId(String.valueOf(board.getId()));
+    debitRequest.setCustomerId(winner.getTpiCustomerId());
     debitRequest.setGameTypeId(tpiProperties.getGameTypeId());
     debitRequest.setGameTypeVariationId(tpiProperties.getGameTypeVariationId());
     debitRequest.setAmount(new MoneyAmount(tpiProperties.getCurrency(), amountCents));

@@ -15,7 +15,12 @@
                 <div class="brand-subtitle">Squares Pools Lobby</div>
             </div>
         </div>
-        <nav class="nav-actions">
+        <button class="hamburger-menu" id="hamburger-menu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="nav-actions" id="nav-actions">
             <a class="nav-link" href="/login" id="login-nav">Login</a>
             <a class="nav-link" href="/history">History</a>
             <a class="nav-link" href="/admin" id="admin-nav">Admin Console</a>
@@ -90,6 +95,9 @@
         const displayName = username || localStorage.getItem('squares.displayName');
         const role = localStorage.getItem('squares.role');
         const adminNav = document.getElementById('admin-nav');
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const navActions = document.getElementById('nav-actions');
+
         if (loginNav && displayName) {
             loginNav.textContent = displayName;
         }
@@ -109,6 +117,33 @@
                     window.location.href = '/';
                 });
             }
+        }
+
+        // Hamburger menu toggle
+        if (hamburgerMenu && navActions) {
+            hamburgerMenu.addEventListener('click', () => {
+                const isActive = hamburgerMenu.classList.toggle('active');
+                navActions.classList.toggle('active');
+                document.body.classList.toggle('nav-open', isActive);
+            });
+
+            // Close menu when clicking on a nav link
+            navActions.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                });
+            });
+
+            // Close menu when clicking outside (on the overlay background)
+            navActions.addEventListener('click', (e) => {
+                if (e.target === navActions) {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                }
+            });
         }
     })();
 </script>

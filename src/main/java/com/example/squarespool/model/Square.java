@@ -39,6 +39,7 @@ public class Square {
     private String ownerSessionId;
     private String reservedBySessionId;
     private Instant reservedUntil;
+    private String tpiCustomerId;
 
     private boolean wonQ1;
     private boolean wonQ2;
@@ -122,6 +123,14 @@ public class Square {
 
     public void setReservedUntil(Instant reservedUntil) {
         this.reservedUntil = reservedUntil;
+    }
+
+    public String getTpiCustomerId() {
+        return tpiCustomerId;
+    }
+
+    public void setTpiCustomerId(String tpiCustomerId) {
+        this.tpiCustomerId = tpiCustomerId;
     }
 
     public boolean isWonQ1() {
