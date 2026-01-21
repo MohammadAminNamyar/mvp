@@ -36,6 +36,11 @@ public class LobbyController {
         return boardService.listBoardsByGameAndBet(gameId, betCents);
     }
 
+    @GetMapping("/games/{gameId}/bets")
+    public List<BetOption> listBetsByGame(@PathVariable String gameId) {
+        return boardService.listBetOptionsByGame(gameId);
+    }
+
     @GetMapping("/bets")
     public List<BetOption> listBets() {
         return boardService.listBetOptions();
