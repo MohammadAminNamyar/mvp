@@ -209,13 +209,15 @@
     });
 
     document.getElementById('create-board').addEventListener('click', () => {
+        const sportType = (sportTypeInput.value || '').trim() || 'Football';
+        const gameName = (gameNameInput.value || '').trim() || 'Matchup';
         fetch('/admin/boards', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
                 name: boardNameInput.value,
-                sportType: sportTypeInput.value,
-                gameName: gameNameInput.value,
+                sportType,
+                gameName,
                 gameId: gameIdInput.value,
                 homeTeam: homeTeamInput.value,
                 awayTeam: awayTeamInput.value,
