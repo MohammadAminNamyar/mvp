@@ -32,6 +32,7 @@ squares:
     - 200
     - 500
     - 1000
+  fixturesBaseUrl: http://mock01.dev.alea.ca:5000
 
 logging:
   level:
