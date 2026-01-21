@@ -35,10 +35,10 @@ public class Board {
     private int priceCents;
     private int housePercent;
     private int minSquaresToActivate;
-    private int payoutQ1Percent = 25;
-    private int payoutQ2Percent = 25;
-    private int payoutQ3Percent = 25;
-    private int payoutQ4Percent = 25;
+    private double payoutQ1Percent = 12.5;
+    private double payoutQ2Percent = 25.0;
+    private double payoutQ3Percent = 12.5;
+    private double payoutQ4Percent = 50.0;
 
     @Enumerated(EnumType.STRING)
     private BoardStatus status = BoardStatus.OPEN;
@@ -49,6 +49,14 @@ public class Board {
     private int homeScore;
     private int awayScore;
     private String gameClock;
+    private int gameClockSeconds;
+    private boolean gameClockRunning;
+    private Instant gameClockUpdatedAt;
+    private int rolloverCents;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "board_rollover_quarters", joinColumns = @JoinColumn(name = "board_id"))
+    @Enumerated(EnumType.STRING)
+    private Set<Quarter> rolloverQuarters = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private Quarter currentQuarter = Quarter.Q1;
@@ -139,35 +147,35 @@ public class Board {
         this.minSquaresToActivate = minSquaresToActivate;
     }
 
-    public int getPayoutQ1Percent() {
+    public double getPayoutQ1Percent() {
         return payoutQ1Percent;
     }
 
-    public void setPayoutQ1Percent(int payoutQ1Percent) {
+    public void setPayoutQ1Percent(double payoutQ1Percent) {
         this.payoutQ1Percent = payoutQ1Percent;
     }
 
-    public int getPayoutQ2Percent() {
+    public double getPayoutQ2Percent() {
         return payoutQ2Percent;
     }
 
-    public void setPayoutQ2Percent(int payoutQ2Percent) {
+    public void setPayoutQ2Percent(double payoutQ2Percent) {
         this.payoutQ2Percent = payoutQ2Percent;
     }
 
-    public int getPayoutQ3Percent() {
+    public double getPayoutQ3Percent() {
         return payoutQ3Percent;
     }
 
-    public void setPayoutQ3Percent(int payoutQ3Percent) {
+    public void setPayoutQ3Percent(double payoutQ3Percent) {
         this.payoutQ3Percent = payoutQ3Percent;
     }
 
-    public int getPayoutQ4Percent() {
+    public double getPayoutQ4Percent() {
         return payoutQ4Percent;
     }
 
-    public void setPayoutQ4Percent(int payoutQ4Percent) {
+    public void setPayoutQ4Percent(double payoutQ4Percent) {
         this.payoutQ4Percent = payoutQ4Percent;
     }
 
@@ -217,6 +225,46 @@ public class Board {
 
     public void setGameClock(String gameClock) {
         this.gameClock = gameClock;
+    }
+
+    public int getGameClockSeconds() {
+        return gameClockSeconds;
+    }
+
+    public void setGameClockSeconds(int gameClockSeconds) {
+        this.gameClockSeconds = gameClockSeconds;
+    }
+
+    public boolean isGameClockRunning() {
+        return gameClockRunning;
+    }
+
+    public void setGameClockRunning(boolean gameClockRunning) {
+        this.gameClockRunning = gameClockRunning;
+    }
+
+    public Instant getGameClockUpdatedAt() {
+        return gameClockUpdatedAt;
+    }
+
+    public void setGameClockUpdatedAt(Instant gameClockUpdatedAt) {
+        this.gameClockUpdatedAt = gameClockUpdatedAt;
+    }
+
+    public int getRolloverCents() {
+        return rolloverCents;
+    }
+
+    public void setRolloverCents(int rolloverCents) {
+        this.rolloverCents = rolloverCents;
+    }
+
+    public Set<Quarter> getRolloverQuarters() {
+        return rolloverQuarters;
+    }
+
+    public void setRolloverQuarters(Set<Quarter> rolloverQuarters) {
+        this.rolloverQuarters = rolloverQuarters;
     }
 
     public Quarter getCurrentQuarter() {

@@ -13,10 +13,10 @@ public class AdminBoardSummary {
     private int priceCents;
     private int housePercent;
     private int minSquaresToActivate;
-    private int payoutQ1Percent;
-    private int payoutQ2Percent;
-    private int payoutQ3Percent;
-    private int payoutQ4Percent;
+    private double payoutQ1Percent;
+    private double payoutQ2Percent;
+    private double payoutQ3Percent;
+    private double payoutQ4Percent;
     private BoardStatus status;
     private int openSquares;
 
@@ -100,35 +100,35 @@ public class AdminBoardSummary {
         this.minSquaresToActivate = minSquaresToActivate;
     }
 
-    public int getPayoutQ1Percent() {
+    public double getPayoutQ1Percent() {
         return payoutQ1Percent;
     }
 
-    public void setPayoutQ1Percent(int payoutQ1Percent) {
+    public void setPayoutQ1Percent(double payoutQ1Percent) {
         this.payoutQ1Percent = payoutQ1Percent;
     }
 
-    public int getPayoutQ2Percent() {
+    public double getPayoutQ2Percent() {
         return payoutQ2Percent;
     }
 
-    public void setPayoutQ2Percent(int payoutQ2Percent) {
+    public void setPayoutQ2Percent(double payoutQ2Percent) {
         this.payoutQ2Percent = payoutQ2Percent;
     }
 
-    public int getPayoutQ3Percent() {
+    public double getPayoutQ3Percent() {
         return payoutQ3Percent;
     }
 
-    public void setPayoutQ3Percent(int payoutQ3Percent) {
+    public void setPayoutQ3Percent(double payoutQ3Percent) {
         this.payoutQ3Percent = payoutQ3Percent;
     }
 
-    public int getPayoutQ4Percent() {
+    public double getPayoutQ4Percent() {
         return payoutQ4Percent;
     }
 
-    public void setPayoutQ4Percent(int payoutQ4Percent) {
+    public void setPayoutQ4Percent(double payoutQ4Percent) {
         this.payoutQ4Percent = payoutQ4Percent;
     }
 

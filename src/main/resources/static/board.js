@@ -3,6 +3,7 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
+    const displayNameKey = 'squares.displayName';
     const ticketKey = 'squares.serviceTicket';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
@@ -10,15 +11,18 @@
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    let displayName = username;
+    if (!displayName) {
+        displayName = localStorage.getItem(displayNameKey);
+        if (!displayName) {
+            displayName = `Guest-${sessionId.slice(0, 6)}`;
+            localStorage.setItem(displayNameKey, displayName);
+        }
+    }
     const loginNav = document.getElementById('login-nav');
     const serviceTicket = localStorage.getItem(ticketKey);
-    if (!username) {
-        const redirect = encodeURIComponent(window.location.pathname);
-        window.location.href = `/login?redirect=${redirect}`;
-        return;
-    }
     if (loginNav) {
-        loginNav.textContent = username;
+        loginNav.textContent = displayName;
     }
 
     let snapshot = null;
@@ -56,7 +60,13 @@
         scoreboardClock: document.getElementById('scoreboard-clock'),
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
         scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
-        loginNav
+        confettiLayer: document.getElementById('confetti-layer'),
+        purchaseModal: document.getElementById('purchase-modal'),
+        purchaseCount: document.getElementById('purchase-count'),
+        purchaseTotal: document.getElementById('purchase-total'),
+        purchaseConfirm: document.getElementById('purchase-confirm'),
+        purchaseCancel: document.getElementById('purchase-cancel'),
+        purchaseBackdrop: document.getElementById('purchase-backdrop')
     };
 
     function fetchSnapshot() {
@@ -86,10 +96,11 @@
     }
 
     function purchase() {
-        const customerName = username.trim();
+        let customerName = displayName.trim();
         if (!customerName) {
-            elements.message.textContent = 'Enter a display name.';
-            return;
+            displayName = `Guest-${sessionId.slice(0, 6)}`;
+            localStorage.setItem(displayNameKey, displayName);
+            customerName = displayName;
         }
         const indices = Array.from(selected);
         if (indices.length === 0) {
@@ -128,7 +139,7 @@
         if (!snapshot) {
             return;
         }
-        elements.customerName.textContent = username;
+        elements.customerName.textContent = displayName;
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
@@ -237,7 +248,19 @@
         if (!square) {
             return;
         }
-        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner', 'flash');
+        cell.classList.remove(
+            'empty',
+            'reserved-me',
+            'reserved-other',
+            'reserved',
+            'taken',
+            'taken-me',
+            'taken-other',
+            'house',
+            'current-winner',
+            'winner',
+            'flash'
+        );
         cell.textContent = '';
         const isReservedByMe = square.status === 'RESERVED' && square.reservedBySessionId === sessionId;
         if (square.status === 'EMPTY') {
@@ -248,9 +271,10 @@
                 });
             }, { once: true });
         } else if (square.status === 'RESERVED') {
+            cell.classList.add('reserved');
+            cell.textContent = 'Reserved';
             if (isReservedByMe) {
                 cell.classList.add('reserved-me');
-                cell.textContent = 'Reserved';
                 cell.addEventListener('click', () => {
                     unreserve(square.idx).catch(err => {
                         elements.message.textContent = err.message;
@@ -258,22 +282,32 @@
                 }, { once: true });
             } else {
                 cell.classList.add('reserved-other');
-                // Add flash animation only for newly reserved squares by others
                 if (isNewlyReservedByOther(square)) {
                     cell.classList.add('flash');
-                    // Remove flash class after animation completes
                     setTimeout(() => {
                         cell.classList.remove('flash');
                     }, 400);
                 }
-                // X is displayed via CSS ::after pseudo-element
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            cell.textContent = square.ownerName || 'Taken';
+            const ownedByMe = square.ownerSessionId
+                ? square.ownerSessionId === sessionId
+                : (square.ownerName && square.ownerName === displayName);
+            if (ownedByMe) {
+                cell.classList.add('taken-me');
+                cell.textContent = 'Mine';
+            } else {
+                cell.classList.add('taken-other');
+                cell.textContent = 'Taken';
+            }
         } else if (square.status === 'HOUSE') {
             cell.classList.add('house');
             cell.textContent = 'HOUSE';
+        }
+
+        if (square.wonQ1 || square.wonQ2 || square.wonQ3 || square.wonFinal) {
+            cell.classList.add('winner');
         }
 
         if (snapshot.currentWinnerIdx === square.idx) {
@@ -284,18 +318,21 @@
     }
 
     function addBadge(cell, square) {
-        const labels = [];
-        if (square.wonQ1) labels.push('1st');
-        if (square.wonQ2) labels.push('half');
-        if (square.wonQ3) labels.push('3rd');
-        if (square.wonFinal) labels.push('final');
-        if (labels.length === 0) {
+        const badges = [];
+        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left', color: 'rgba(56, 189, 248, 0.95)' });
+        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right', color: 'rgba(167, 139, 250, 0.95)' });
+        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left', color: 'rgba(52, 211, 153, 0.95)' });
+        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right', color: 'rgba(251, 191, 36, 0.95)' });
+        if (badges.length === 0) {
             return;
         }
-        const badge = document.createElement('div');
-        badge.className = 'badge';
-        badge.textContent = labels.join(',');
-        cell.appendChild(badge);
+        badges.forEach(entry => {
+            const badge = document.createElement('div');
+            badge.className = `badge badge-${entry.position}`;
+            badge.textContent = entry.label;
+            badge.style.setProperty('--badge-color', entry.color);
+            cell.appendChild(badge);
+        });
     }
 
     function renderChecklist() {
@@ -310,7 +347,7 @@
 
     function renderHistory() {
         const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerName === username)
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId)
             .sort((a, b) => a.idx - b.idx)
             .slice(0, 12);
 
@@ -324,8 +361,7 @@
 
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
-            const label = square.ownerName ? square.ownerName : 'Taken';
-            entry.textContent = `#${square.idx} • ${label} (Buyer)`;
+            entry.textContent = `#${square.idx} • Mine`;
             elements.historyList.appendChild(entry);
         });
     }
@@ -334,16 +370,54 @@
         if (!elements.prizeGrid) {
             return;
         }
+        const ownedCount = snapshot.squares
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
-            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+<<<<<<< HEAD
+            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+=======
+            {
+                label: '1ST',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ1Cents,
+                perSquare: snapshot.prizePerSquareQ1Cents,
+                rolled: snapshot.prizeQ1RolledOver
+            },
+            {
+                label: '1ST',
+                period: 'HALF',
+                cents: snapshot.prizeQ2Cents,
+                perSquare: snapshot.prizePerSquareQ2Cents,
+                rolled: snapshot.prizeQ2RolledOver
+            },
+            {
+                label: '3RD',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ3Cents,
+                perSquare: snapshot.prizePerSquareQ3Cents,
+                rolled: snapshot.prizeQ3RolledOver
+            },
+            {
+                label: 'FULL',
+                period: 'GAME',
+                cents: snapshot.prizeQ4Cents,
+                perSquare: snapshot.prizePerSquareQ4Cents,
+                rolled: false
+            }
+>>>>>>> origin/dev
         ];
+        const adjusted = applyRollover(prizes);
         elements.prizeGrid.innerHTML = '';
         prizes.forEach(prize => {
+            const display = adjusted[prize.key];
             const card = document.createElement('div');
             card.className = 'grid-prize';
+            if (snapshot.currentQuarter === prize.key) {
+                card.classList.add('is-current');
+            }
             const period = document.createElement('div');
             period.className = 'prize-period';
             const strong = document.createElement('strong');
@@ -354,9 +428,25 @@
             period.appendChild(sub);
             const amount = document.createElement('div');
             amount.className = 'prize-amount';
-            amount.textContent = formatMoney(prize.cents);
+<<<<<<< HEAD
+            amount.textContent = display.vacant ? 'VACANT' : formatMoney(display.cents);
+=======
+            if (prize.rolled) {
+                amount.textContent = 'Rolled';
+            } else {
+                amount.textContent = formatMoney(prize.cents);
+            }
+>>>>>>> origin/dev
             card.appendChild(period);
             card.appendChild(amount);
+            const share = document.createElement('div');
+            share.className = 'prize-share';
+            if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
+                share.textContent = `Refund per player: ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
+            } else if (!prize.rolled) {
+                share.textContent = `Your share: ${formatMoney(prize.perSquare * ownedCount)}`;
+            }
+            card.appendChild(share);
             elements.prizeGrid.appendChild(card);
         });
     }
@@ -374,19 +464,104 @@
         }
         setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
+        triggerScoreCelebration();
+        const ownedCount = snapshot.squares
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
-            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+<<<<<<< HEAD
+            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+=======
+            {
+                label: '1ST',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ1Cents,
+                perSquare: snapshot.prizePerSquareQ1Cents,
+                rolled: snapshot.prizeQ1RolledOver
+            },
+            {
+                label: '1ST',
+                period: 'HALF',
+                cents: snapshot.prizeQ2Cents,
+                perSquare: snapshot.prizePerSquareQ2Cents,
+                rolled: snapshot.prizeQ2RolledOver
+            },
+            {
+                label: '3RD',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ3Cents,
+                perSquare: snapshot.prizePerSquareQ3Cents,
+                rolled: snapshot.prizeQ3RolledOver
+            },
+            {
+                label: 'FULL',
+                period: 'GAME',
+                cents: snapshot.prizeQ4Cents,
+                perSquare: snapshot.prizePerSquareQ4Cents,
+                rolled: false
+            }
+>>>>>>> origin/dev
         ];
+        const adjusted = applyRollover(prizes);
         elements.scoreboardPrizes.innerHTML = '';
         prizes.forEach(prize => {
+            const display = adjusted[prize.key];
             const item = document.createElement('div');
             item.className = 'scoreboard-prize';
-            item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
+<<<<<<< HEAD
+            if (snapshot.currentQuarter === prize.key) {
+                item.classList.add('is-current');
+            }
+            const displayText = display.vacant ? 'VACANT' : formatMoney(display.cents);
+            item.textContent = `${prize.label} ${prize.period} ${displayText}`;
+=======
+            if (prize.rolled) {
+                item.textContent = `${prize.label} ${prize.period} Rolled`;
+            } else if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
+                item.textContent = `${prize.label} ${prize.period} Refund ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
+            } else {
+                const share = formatMoney(prize.perSquare * ownedCount);
+                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)} • Yours ${share}`;
+            }
+>>>>>>> origin/dev
             elements.scoreboardPrizes.appendChild(item);
         });
+    }
+
+    function applyRollover(prizes) {
+        const result = {};
+        prizes.forEach(prize => {
+            result[prize.key] = { cents: prize.cents, vacant: false };
+        });
+        if (!snapshot.rolloverOnNoWinner || !snapshot.rolloverCents) {
+            return result;
+        }
+        if (result.Q4) {
+            result.Q4.cents += snapshot.rolloverCents;
+        }
+        const rolloverQuarters = snapshot.rolloverQuarters || [];
+        rolloverQuarters.forEach(quarter => {
+            if (result[quarter]) {
+                result[quarter].cents = 0;
+                result[quarter].vacant = true;
+            }
+        });
+        return result;
+    }
+
+    function nextQuarter(quarter) {
+        switch (quarter) {
+            case 'Q1':
+                return 'Q2';
+            case 'Q2':
+                return 'Q3';
+            case 'Q3':
+                return 'Q4';
+            default:
+                return null;
+        }
     }
 
     function formatMoney(cents) {
@@ -402,7 +577,93 @@
         element.alt = teamName ? `${teamName} logo` : 'Team logo';
     }
 
-    elements.confirm.addEventListener('click', purchase);
+    function triggerScoreCelebration() {
+        if (!previousSnapshot) {
+            return;
+        }
+        const awayDelta = snapshot.awayScore - previousSnapshot.awayScore;
+        const homeDelta = snapshot.homeScore - previousSnapshot.homeScore;
+        if (awayDelta > 0) {
+            celebrateTeam('away');
+        }
+        if (homeDelta > 0) {
+            celebrateTeam('home');
+        }
+    }
+
+    function celebrateTeam(side) {
+        const isAway = side === 'away';
+        const logo = isAway ? elements.scoreboardAwayLogo : elements.scoreboardHomeLogo;
+        const color = isAway ? '#ef4444' : '#3b82f6';
+        if (logo) {
+            logo.classList.remove('score-celebrate');
+            void logo.offsetWidth;
+            logo.style.setProperty('--glow-color', color);
+            logo.classList.add('score-celebrate');
+            setTimeout(() => {
+                logo.classList.remove('score-celebrate');
+            }, 2000);
+        }
+        spawnConfetti(color);
+    }
+
+    function spawnConfetti(color) {
+        const layer = elements.confettiLayer;
+        if (!layer) {
+            return;
+        }
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            const piece = document.createElement('span');
+            piece.className = 'confetti-piece';
+            piece.style.backgroundColor = color;
+            piece.style.left = `${Math.random() * 100}%`;
+            piece.style.animationDelay = `${Math.random() * 0.4}s`;
+            piece.style.animationDuration = `${2.1 + Math.random() * 0.7}s`;
+            layer.appendChild(piece);
+            setTimeout(() => piece.remove(), 3200);
+        }
+    }
+
+    function openPurchaseModal() {
+        if (!elements.purchaseModal) {
+            purchase();
+            return;
+        }
+        const count = selected.size;
+        if (count === 0) {
+            elements.message.textContent = 'Select at least one square.';
+            return;
+        }
+        const total = (snapshot.priceCents * count) / 100;
+        elements.purchaseCount.textContent = count;
+        elements.purchaseTotal.textContent = total.toFixed(2);
+        elements.purchaseModal.classList.add('open');
+    }
+
+    function closePurchaseModal() {
+        if (elements.purchaseModal) {
+            elements.purchaseModal.classList.remove('open');
+        }
+    }
+
+    elements.confirm.addEventListener('click', openPurchaseModal);
+    if (elements.purchaseConfirm) {
+        elements.purchaseConfirm.addEventListener('click', () => {
+            closePurchaseModal();
+            purchase();
+        });
+    }
+    if (elements.purchaseCancel) {
+        elements.purchaseCancel.addEventListener('click', () => {
+            closePurchaseModal();
+        });
+    }
+    if (elements.purchaseBackdrop) {
+        elements.purchaseBackdrop.addEventListener('click', () => {
+            closePurchaseModal();
+        });
+    }
     elements.changeUser.addEventListener('click', () => {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;

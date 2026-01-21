@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Squares Board</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=20260121-2" />
 </head>
 <body class="theme-dark">
 <div class="app-shell">
@@ -17,6 +17,7 @@
         </div>
         <nav class="nav-actions">
             <a class="nav-link" href="/">Back to Lobby</a>
+            <a class="nav-link" href="/history">History</a>
             <span class="status-pill" id="login-nav"></span>
             <span class="status-pill glow" id="board-status">OPEN</span>
             <span class="status-pill">Viewers: <span id="viewer-count">0</span></span>
@@ -45,6 +46,7 @@
                 </div>
             </div>
         </section>
+        <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
 
         <section class="hero-card">
             <div class="hero-heading">
@@ -68,11 +70,12 @@
                     <h2>10x10 Board</h2>
                     <div class="legend">
                         <span class="legend-item available">Available</span>
-                        <span class="legend-item reserved-me">Reserved (You)</span>
-                        <span class="legend-item reserved-other">Reserved (Other)</span>
+                        <span class="legend-item reserved">Reserved</span>
+                        <span class="legend-item mine">Mine</span>
                         <span class="legend-item taken">Taken</span>
                         <span class="legend-item house">House</span>
-                        <span class="legend-item current">Current Winner</span>
+                        <span class="legend-item winner">Result</span>
+                        <span class="legend-item current">Current Score</span>
                     </div>
                 </div>
                 <div id="board" th:attr="data-board-id=${boardId}"></div>
@@ -120,6 +123,7 @@
                         <li>Auto-purchase tool for random squares.</li>
                         <li>Auto-purchase across multiple boards.</li>
                         <li>Optional return-to-pool for unclaimed lock squares.</li>
+                        <li>Player win/loss history dashboard.</li>
                     </ul>
                 </div>
             </aside>
@@ -127,8 +131,21 @@
     </main>
 </div>
 
+<div class="modal" id="purchase-modal" aria-hidden="true">
+    <div class="modal-backdrop" id="purchase-backdrop"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="purchase-title">
+        <h3 id="purchase-title">Confirm Purchase</h3>
+        <p>You have selected '<span id="purchase-count">0</span>' squares.</p>
+        <p>Total cost for $<span id="purchase-total">0.00</span></p>
+        <div class="modal-actions">
+            <button class="secondary-btn" id="purchase-cancel" type="button">Cancel</button>
+            <button id="purchase-confirm" type="button">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-<script src="/board.js"></script>
+<script src="/board.js?v=20260121-3"></script>
 </body>
 </html>

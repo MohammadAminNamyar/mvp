@@ -22,15 +22,18 @@ springdoc:
 
 squares:
   reservationTtlSeconds: 30
+  clockTickMs: 1000
   adminToken: admin
   houseOnLock: true
   showPurchaserNames: false
+  rolloverOnNoWinner: true
   authEnabled: false
   authUserHeader: X-User-Id
   betAmountsCents:
     - 200
     - 500
     - 1000
+  fixturesBaseUrl: http://mock01.dev.alea.ca:5000
 
 logging:
   level:

@@ -1,6 +1,7 @@
 package com.example.squarespool.repository;
 
 import com.example.squarespool.model.Board;
+import com.example.squarespool.model.BoardStatus;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,4 +22,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     @Query("select distinct b.priceCents from Board b order by b.priceCents")
     List<Integer> findDistinctPriceCentsOrderByPriceCentsAsc();
+
+    List<Board> findByStatus(BoardStatus status);
 }

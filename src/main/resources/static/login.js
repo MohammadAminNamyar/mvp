@@ -5,6 +5,7 @@
     const message = document.getElementById('login-message');
     const submitButton = form.querySelector('button[type="submit"]');
     const usernameKey = 'squares.username';
+    const displayNameKey = 'squares.displayName';
     const ticketKey = 'squares.serviceTicket';
     const roleKey = 'squares.role';
     const loginRole = document.body.dataset.loginRole || 'user';
@@ -58,6 +59,7 @@
                 serviceTicket = `ST-${username}`;
             }
             localStorage.setItem(usernameKey, username);
+            localStorage.setItem(displayNameKey, username);
             localStorage.setItem(ticketKey, serviceTicket);
             localStorage.setItem(roleKey, loginRole);
             window.location.href = redirect;
