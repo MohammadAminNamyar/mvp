@@ -19,6 +19,8 @@ public class AdminBoardSummary {
     private double payoutQ4Percent;
     private BoardStatus status;
     private int openSquares;
+    private int totalSquares;
+    private long revenueCents;
 
     public Long getId() {
         return id;
@@ -146,5 +148,21 @@ public class AdminBoardSummary {
 
     public void setOpenSquares(int openSquares) {
         this.openSquares = openSquares;
+    }
+
+    public int getTotalSquares() {
+        return totalSquares;
+    }
+
+    public void setTotalSquares(int totalSquares) {
+        this.totalSquares = totalSquares;
+    }
+
+    public long getRevenueCents() {
+        return revenueCents;
+    }
+
+    public void setRevenueCents(long revenueCents) {
+        this.revenueCents = revenueCents;
     }
 }
