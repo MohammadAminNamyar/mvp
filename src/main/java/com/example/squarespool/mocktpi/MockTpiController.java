@@ -34,6 +34,17 @@ public class MockTpiController {
         return ResponseEntity.status(status).body(response);
     }
 
+    @PostMapping("/credit")
+    public ResponseEntity<DebitResponse> credit(@Validated @RequestBody DebitRequest request) {
+        log.info("Mock TPI credit request customer={} amount={} currency={} txnId={}", request.getCustomerId(), request.getAmount() != null ? request.getAmount().getValue() : null, request.getAmount() != null ? request.getAmount().getCurrency() : null, request.getThirdPartyTransactionId());
+        DebitResponse response = mockTpiService.credit(request);
+        HttpStatus status = response.getResponseCode() != null && response.getResponseCode() == 0
+                ? HttpStatus.OK
+                : HttpStatus.CONFLICT;
+        log.info("Mock TPI credit response customer={} code={} message={}", request.getCustomerId(), response.getResponseCode(), response.getResponseMessage());
+        return ResponseEntity.status(status).body(response);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleBadRequest(IllegalArgumentException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());

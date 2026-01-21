@@ -46,6 +46,32 @@ public class MockTpiClient implements TpiClient {
         }
     }
 
+    @Override
+    public DebitResponse credit(DebitRequest request) {
+        try {
+            ResponseEntity<DebitResponse> response =
+                    restClient.post()
+                            .uri("/accountservice/credit")
+                            .body(request)
+                            .retrieve()
+                            .toEntity(DebitResponse.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            }
+            throw new IllegalStateException("TPI credit failed with status " + response.getStatusCode());
+        } catch (RestClientResponseException ex) {
+            DebitResponse errorResponse = parseErrorResponse(ex);
+            if (errorResponse != null) {
+                return errorResponse;
+            }
+            throw new IllegalStateException(
+                    "TPI credit failed with status " + ex.getStatusCode() + ": " + ex.getResponseBodyAsString(),
+                    ex);
+        } catch (RestClientException ex) {
+            throw new IllegalStateException("Unable to reach TPI mock service", ex);
+        }
+    }
+
     private DebitResponse parseErrorResponse(RestClientResponseException ex) {
         String responseBody = ex.getResponseBodyAsString();
         if (responseBody == null || responseBody.isBlank()) {
