@@ -1,10 +1,10 @@
 package com.example.squarespool.tpi;
 
-import org.springframework.stereotype.Service;
+import com.example.squarespool.tpi.dto.DebitRequest;
+import com.example.squarespool.tpi.dto.DebitResponse;
 
-@Service
-public class TpiClient {
-  public TpiCustomer resolveCustomer(String serviceTicket, String fallbackName) {
-    return new TpiCustomer(fallbackName);
-  }
+public interface TpiClient {
+  TpiCustomer resolveCustomer(String serviceTicket, String fallbackName);
+
+  DebitResponse debit(DebitRequest request);
 }
