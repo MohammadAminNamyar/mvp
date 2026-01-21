@@ -1057,6 +1057,10 @@ a {
     }
 
     .lobby-grid {
+        padding: 0;
+    }
+
+    .lobby-panel {
         padding: 0 15px;
     }
 
@@ -1082,9 +1086,73 @@ a {
     }
 
     .games-vs-banner {
-        flex-direction: column;
-        gap: 20px;
+        flex-direction: column !important;
+        gap: 16px;
         padding: 20px 0;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .games-vs-banner .vs-team {
+        min-width: auto !important;
+        width: 100%;
+        max-width: 250px;
+    }
+
+    .games-vs-banner .vs-team-away {
+        order: 1;
+    }
+
+    .games-vs-banner .vs-divider {
+        order: 2;
+        padding: 12px 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .games-vs-banner .vs-team-home {
+        order: 3;
+    }
+
+    .games-vs-banner .vs-divider::before,
+    .games-vs-banner .vs-divider::after {
+        width: 80px;
+        height: 1px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .games-vs-banner .vs-divider::before {
+        top: 0;
+    }
+
+    .games-vs-banner .vs-divider::after {
+        bottom: 0;
+    }
+
+    .vs-team-name {
+        font-size: 16px;
+    }
+
+    .vs-text {
+        font-size: 20px;
+        padding: 8px 0;
+    }
+
+    .games-list {
+        margin-left: -15px;
+        margin-right: -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        width: calc(100% + 30px);
     }
 }
 
