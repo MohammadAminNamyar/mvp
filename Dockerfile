@@ -1,7 +1,7 @@
 ARG CI_REGISTRY
 FROM ${CI_REGISTRY}/firefly/docker/java17:latest
 
-WORKDIR /srv/admintools
+WORKDIR /srv/square-game
 
 COPY target/square-game.jar bin/square-game.jar
 
