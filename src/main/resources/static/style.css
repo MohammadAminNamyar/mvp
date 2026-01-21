@@ -109,7 +109,7 @@ a {
 }
 
 .main-content {
-    padding: 0 0 48px 0;
+    padding: 0 24px 48px 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -130,8 +130,8 @@ a {
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
-    width: 100%;
-    margin: 0;
+    width: calc(100% + 48px);
+    margin: 0 -24px;
 }
 
 .hero-card::before {
@@ -1169,6 +1169,95 @@ a {
 
     .hero-card {
         padding: 32px 20px;
+        width: 100%;
+        margin: 0;
+    }
+
+    .scoreboard-banner {
+        border-radius: 0 0 16px 16px;
+    }
+
+    .scoreboard-line {
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr;
+        gap: 16px;
+        align-items: start;
+        padding: 16px;
+        position: relative;
+    }
+
+    .scoreboard-line::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 16px;
+        bottom: 16px;
+        width: 1px;
+        background: rgba(226, 232, 240, 0.4);
+        transform: translateX(-50%);
+        z-index: 1;
+    }
+
+    .scoreboard-team-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 0;
+    }
+
+    .scoreboard-team-block:first-child {
+        order: 1;
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .scoreboard-team-block:last-child {
+        order: 5;
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .scoreboard-score {
+        font-size: 32px;
+        font-weight: 900;
+        margin: 0;
+        text-align: center;
+        padding: 8px 0 0 0;
+        width: 100%;
+    }
+
+    #scoreboard-away-score {
+        order: 2;
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .scoreboard-divider {
+        display: none;
+    }
+
+    .scoreboard-clock {
+        display: none;
+    }
+
+    #scoreboard-home-score {
+        order: 4;
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    .scoreboard-logo {
+        width: 32px;
+        height: 36px;
+    }
+
+    .scoreboard-team-block span {
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
     }
 
     .hero-heading h1 {

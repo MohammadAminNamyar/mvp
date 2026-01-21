@@ -23,8 +23,6 @@
         <nav class="nav-actions" id="nav-actions">
             <a class="nav-link" href="/">Back to Lobby</a>
             <a class="nav-link" href="/history">History</a>
-            <span class="status-pill" id="login-nav"></span>
-            <span class="status-pill glow" id="board-status">OPEN</span>
             <span class="status-pill">Viewers: <span id="viewer-count">0</span></span>
         </nav>
     </header>
@@ -55,17 +53,6 @@
 
         <section class="content-grid">
             <div class="board-panel card">
-                <div class="panel-header">
-                    <h2>10x10 Board</h2>
-                    <div class="legend">
-                        <span class="legend-item available">Available</span>
-                        <span class="legend-item reserved">Reserved</span>
-                        <span class="legend-item mine">Mine</span>
-                        <span class="legend-item taken">Taken</span>
-                        <span class="legend-item winner">Result</span>
-                        <span class="legend-item current">Current Score</span>
-                    </div>
-                </div>
                 <div id="board" th:attr="data-board-id=${boardId}"></div>
             </div>
 
