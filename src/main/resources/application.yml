@@ -26,6 +26,7 @@ squares:
   adminToken: admin
   houseOnLock: true
   showPurchaserNames: false
+  rolloverOnNoWinner: true
   authEnabled: false
   authUserHeader: X-User-Id
   betAmountsCents:

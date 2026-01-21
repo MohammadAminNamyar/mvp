@@ -43,6 +43,10 @@
                     <input type="checkbox" id="show-purchaser-names" />
                     Show purchaser names to players
                 </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="rollover-no-winner" />
+                    Rollover prize if no winner (final goes to house)
+                </label>
                 <button id="save-settings">Save Settings</button>
                 <label class="admin-field" for="board-name">
                     <span>Board name</span>
@@ -154,7 +158,7 @@
     </main>
 </div>
 
-<script src="/admin.js"></script>
+<script src="/admin.js?v=20260121-1"></script>
 <script>
     (function () {
         const logoutNav = document.getElementById('logout-nav');
