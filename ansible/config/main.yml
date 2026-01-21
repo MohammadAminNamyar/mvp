@@ -18,7 +18,7 @@ app_check_port: "{{ app_port }}"
 app_prometheus_agent_port: 8021
 
 # healthcheck configuration
-application_healthcheck_path: 
+application_healthcheck_path: ""
 application_healthcheck_port: "{{ app_check_port }}"
 application_port_environment_variables:
   SERVER_PORT: "{{ app_port }}"
