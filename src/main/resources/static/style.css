@@ -167,6 +167,11 @@ a {
     font-weight: 600;
 }
 
+.scoreboard-prize.is-current {
+    border-color: rgba(59, 130, 246, 0.9);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+}
+
 .scoreboard-scores {
     display: grid;
     gap: 6px;
@@ -204,6 +209,11 @@ a {
     font-size: 18px;
     font-weight: 600;
     color: #a5f3fc;
+}
+
+.grid-prize.is-current {
+    border-color: rgba(56, 189, 248, 0.8);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
 }
 
 .scoreboard-team-block {

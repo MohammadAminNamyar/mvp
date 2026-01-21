@@ -363,15 +363,20 @@
             return;
         }
         const prizes = [
-            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
         ];
+        const adjusted = applyRollover(prizes);
         elements.prizeGrid.innerHTML = '';
         prizes.forEach(prize => {
+            const display = adjusted[prize.key];
             const card = document.createElement('div');
             card.className = 'grid-prize';
+            if (snapshot.currentQuarter === prize.key) {
+                card.classList.add('is-current');
+            }
             const period = document.createElement('div');
             period.className = 'prize-period';
             const strong = document.createElement('strong');
@@ -382,7 +387,7 @@
             period.appendChild(sub);
             const amount = document.createElement('div');
             amount.className = 'prize-amount';
-            amount.textContent = formatMoney(prize.cents);
+            amount.textContent = display.vacant ? 'VACANT' : formatMoney(display.cents);
             card.appendChild(period);
             card.appendChild(amount);
             elements.prizeGrid.appendChild(card);
@@ -404,18 +409,59 @@
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
         triggerScoreCelebration();
         const prizes = [
-            { label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
+            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
+            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
+            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
         ];
+        const adjusted = applyRollover(prizes);
         elements.scoreboardPrizes.innerHTML = '';
         prizes.forEach(prize => {
+            const display = adjusted[prize.key];
             const item = document.createElement('div');
             item.className = 'scoreboard-prize';
-            item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
+            if (snapshot.currentQuarter === prize.key) {
+                item.classList.add('is-current');
+            }
+            const displayText = display.vacant ? 'VACANT' : formatMoney(display.cents);
+            item.textContent = `${prize.label} ${prize.period} ${displayText}`;
             elements.scoreboardPrizes.appendChild(item);
         });
+    }
+
+    function applyRollover(prizes) {
+        const result = {};
+        prizes.forEach(prize => {
+            result[prize.key] = { cents: prize.cents, vacant: false };
+        });
+        if (!snapshot.rolloverOnNoWinner || !snapshot.lastRolloverQuarter || !snapshot.rolloverCents) {
+            return result;
+        }
+        const next = nextQuarter(snapshot.lastRolloverQuarter);
+        if (!next) {
+            return result;
+        }
+        if (result[snapshot.lastRolloverQuarter]) {
+            result[snapshot.lastRolloverQuarter].cents = 0;
+            result[snapshot.lastRolloverQuarter].vacant = true;
+        }
+        if (result[next]) {
+            result[next].cents += snapshot.rolloverCents;
+        }
+        return result;
+    }
+
+    function nextQuarter(quarter) {
+        switch (quarter) {
+            case 'Q1':
+                return 'Q2';
+            case 'Q2':
+                return 'Q3';
+            case 'Q3':
+                return 'Q4';
+            default:
+                return null;
+        }
     }
 
     function formatMoney(cents) {

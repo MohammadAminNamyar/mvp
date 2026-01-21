@@ -73,12 +73,12 @@ public class BoardService {
 
   @Transactional
   public Board createBoard(CreateBoardRequest request) {
-    int payoutSum =
+    double payoutSum =
         request.getPayoutQ1Percent()
             + request.getPayoutQ2Percent()
             + request.getPayoutQ3Percent()
             + request.getPayoutQ4Percent();
-    if (payoutSum != 100) {
+    if (Math.abs(payoutSum - 100.0) > 0.01) {
       throw new IllegalStateException("Payout percentages must total 100");
     }
     Board board = new Board();
@@ -157,12 +157,12 @@ public class BoardService {
 
   @Transactional
   public AdminBoardSummary updateBoard(Long boardId, UpdateBoardRequest request) {
-    int payoutSum =
+    double payoutSum =
         request.getPayoutQ1Percent()
             + request.getPayoutQ2Percent()
             + request.getPayoutQ3Percent()
             + request.getPayoutQ4Percent();
-    if (payoutSum != 100) {
+    if (Math.abs(payoutSum - 100.0) > 0.01) {
       throw new IllegalStateException("Payout percentages must total 100");
     }
     Board board = loadBoard(boardId);
@@ -356,6 +356,7 @@ public class BoardService {
     if (appProperties.isRolloverOnNoWinner() && rollover > 0) {
       prizeCents += rollover;
       board.setRolloverCents(0);
+      board.setLastRolloverQuarter(null);
     }
     boolean playerWinner =
         winner.getStatus() == SquareStatus.TAKEN
@@ -363,11 +364,14 @@ public class BoardService {
             && !winner.getOwnerName().equalsIgnoreCase("HOUSE");
     if (playerWinner) {
       recordPayout(board, quarter, prizeCents, winnerIdx, winner.getOwnerName());
+      board.setLastRolloverQuarter(null);
     } else if (appProperties.isRolloverOnNoWinner() && quarter != Quarter.Q4) {
       board.setRolloverCents(prizeCents);
+      board.setLastRolloverQuarter(quarter);
       recordRollover(board, quarter, prizeCents, winnerIdx);
     } else {
       recordPayout(board, quarter, prizeCents, winnerIdx, "HOUSE");
+      board.setLastRolloverQuarter(null);
     }
     switch (quarter) {
       case Q1 -> winner.setWonQ1(true);
@@ -398,6 +402,7 @@ public class BoardService {
         board.setGameClockRunning(false);
         board.setGameClockUpdatedAt(null);
         board.setRolloverCents(0);
+        board.setLastRolloverQuarter(null);
         board.setCurrentQuarter(Quarter.Q1);
         board.getConfirmedQuarters().clear();
         boardRepository.save(board);
@@ -560,6 +565,9 @@ public class BoardService {
         snapshot.setGameClock(resolveGameClock(board));
         snapshot.setCurrentQuarter(board.getCurrentQuarter());
         snapshot.setConfirmedQuarters(board.getConfirmedQuarters());
+        snapshot.setRolloverOnNoWinner(appProperties.isRolloverOnNoWinner());
+        snapshot.setRolloverCents(board.getRolloverCents());
+        snapshot.setLastRolloverQuarter(board.getLastRolloverQuarter());
         int purchasedCount = (int) squares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
         snapshot.setPurchasedCount(purchasedCount);
         snapshot.setActive(purchasedCount >= board.getMinSquaresToActivate());
@@ -617,7 +625,7 @@ public class BoardService {
     snapshot.setPrizeQ4Cents(q4);
   }
 
-    private int percentOf(long total, int percent) {
+    private int percentOf(long total, double percent) {
         if (total <= 0 || percent <= 0) {
             return 0;
         }

@@ -69,13 +69,13 @@
                 <label class="input-label" for="min-activate">Min squares to activate</label>
                 <input type="number" id="min-activate" placeholder="Min squares to activate" value="0" />
                 <label class="input-label" for="payout-q1">Q1 payout %</label>
-                <input type="number" id="payout-q1" placeholder="Q1 payout %" value="25" />
+                <input type="number" id="payout-q1" placeholder="Q1 payout %" value="12.5" step="0.01" />
                 <label class="input-label" for="payout-q2">Half payout %</label>
-                <input type="number" id="payout-q2" placeholder="Half payout %" value="25" />
+                <input type="number" id="payout-q2" placeholder="Half payout %" value="25" step="0.01" />
                 <label class="input-label" for="payout-q3">Q3 payout %</label>
-                <input type="number" id="payout-q3" placeholder="Q3 payout %" value="25" />
+                <input type="number" id="payout-q3" placeholder="Q3 payout %" value="12.5" step="0.01" />
                 <label class="input-label" for="payout-q4">Final payout %</label>
-                <input type="number" id="payout-q4" placeholder="Final payout %" value="25" />
+                <input type="number" id="payout-q4" placeholder="Final payout %" value="50" step="0.01" />
                 <button id="create-board">Create Board</button>
                 <button id="update-board" type="button">Update Board</button>
             </section>
@@ -116,7 +116,7 @@
     </main>
 </div>
 
-<script src="/admin.js?v=20260121-1"></script>
+<script src="/admin.js?v=20260121-2"></script>
 <script>
     (function () {
         const logoutNav = document.getElementById('logout-nav');

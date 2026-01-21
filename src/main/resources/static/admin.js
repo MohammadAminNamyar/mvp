@@ -38,6 +38,21 @@
     let fixtures = [];
     let boardsById = new Map();
 
+    function applyPayoutDefaults(sportType) {
+        const normalized = (sportType || '').trim().toLowerCase();
+        if (normalized === 'soccer') {
+            payoutQ1Input.value = 33.33;
+            payoutQ2Input.value = 0;
+            payoutQ3Input.value = 0;
+            payoutQ4Input.value = 66.66;
+            return;
+        }
+        payoutQ1Input.value = 12.5;
+        payoutQ2Input.value = 25;
+        payoutQ3Input.value = 12.5;
+        payoutQ4Input.value = 50;
+    }
+
     function tokenHeader() {
         return { 'X-Admin-Token': adminTokenInput.value.trim() };
     }
@@ -135,10 +150,10 @@
         priceCentsInput.value = board.priceCents || 0;
         housePercentInput.value = board.housePercent || 0;
         minActivateInput.value = board.minSquaresToActivate || 0;
-        payoutQ1Input.value = board.payoutQ1Percent || 0;
-        payoutQ2Input.value = board.payoutQ2Percent || 0;
-        payoutQ3Input.value = board.payoutQ3Percent || 0;
-        payoutQ4Input.value = board.payoutQ4Percent || 0;
+        payoutQ1Input.value = board.payoutQ1Percent ?? 0;
+        payoutQ2Input.value = board.payoutQ2Percent ?? 0;
+        payoutQ3Input.value = board.payoutQ3Percent ?? 0;
+        payoutQ4Input.value = board.payoutQ4Percent ?? 0;
     }
 
     function boardHasWagers(board) {
@@ -308,6 +323,12 @@
                 message.textContent = err.message;
             });
     });
+
+    if (sportTypeInput) {
+        applyPayoutDefaults(sportTypeInput.value);
+        sportTypeInput.addEventListener('change', () => applyPayoutDefaults(sportTypeInput.value));
+        sportTypeInput.addEventListener('blur', () => applyPayoutDefaults(sportTypeInput.value));
+    }
 
     document.getElementById('start-game').addEventListener('click', () => {
         const boardId = boardIdInput.value;
