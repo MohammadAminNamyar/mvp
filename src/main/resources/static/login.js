@@ -8,6 +8,7 @@
     const displayNameKey = 'squares.displayName';
     const ticketKey = 'squares.serviceTicket';
     const roleKey = 'squares.role';
+    const adminUsernameKey = 'squares.adminUsername';
     const loginRole = document.body.dataset.loginRole || 'user';
     const loginEndpoint = '/api/auth/login';
 
@@ -58,10 +59,15 @@
             if (!serviceTicket) {
                 serviceTicket = `ST-${username}`;
             }
-            localStorage.setItem(usernameKey, username);
-            localStorage.setItem(displayNameKey, username);
-            localStorage.setItem(ticketKey, serviceTicket);
-            localStorage.setItem(roleKey, loginRole);
+            if (loginRole === 'admin') {
+                localStorage.setItem(adminUsernameKey, username);
+                localStorage.setItem(roleKey, loginRole);
+            } else {
+                localStorage.setItem(usernameKey, username);
+                localStorage.setItem(displayNameKey, username);
+                localStorage.setItem(ticketKey, serviceTicket);
+                localStorage.setItem(roleKey, loginRole);
+            }
             window.location.href = redirect;
         } catch (error) {
             message.textContent = 'Unable to reach the authentication service right now.';

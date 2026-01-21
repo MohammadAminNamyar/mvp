@@ -15,13 +15,14 @@ public class MockTpiService {
     private static final long SUCCESS_CODE = 0L;
     private static final long INSUFFICIENT_FUNDS_CODE = 1001L;
     private static final long INVALID_REQUEST_CODE = 1000L;
+    private static final long DEFAULT_BALANCE_CENTS = 10_000_00L; // $10,000.00
 
     private final Map<String, Long> balances = new ConcurrentHashMap<>();
 
     public DebitResponse debit(DebitRequest request) {
         validateRequest(request);
         String customerKey = request.getCustomerId();
-        long currentBalance = balances.getOrDefault(customerKey, 100_000_00L);
+        long currentBalance = balances.getOrDefault(customerKey, DEFAULT_BALANCE_CENTS);
         long amount = request.getAmount().getValue();
 
         if (amount > currentBalance) {
@@ -29,6 +30,16 @@ public class MockTpiService {
         }
 
         long updated = currentBalance - amount;
+        balances.put(customerKey, updated);
+        return buildResponse(request, SUCCESS_CODE, "OK", updated);
+    }
+
+    public DebitResponse credit(DebitRequest request) {
+        validateRequest(request);
+        String customerKey = request.getCustomerId();
+        long currentBalance = balances.getOrDefault(customerKey, DEFAULT_BALANCE_CENTS);
+        long amount = request.getAmount().getValue();
+        long updated = currentBalance + amount;
         balances.put(customerKey, updated);
         return buildResponse(request, SUCCESS_CODE, "OK", updated);
     }

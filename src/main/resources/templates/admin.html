@@ -202,6 +202,12 @@
                 }
             });
         }
+        logoutNav.addEventListener('click', event => {
+            event.preventDefault();
+            localStorage.removeItem('squares.adminUsername');
+            localStorage.removeItem('squares.role');
+            window.location.href = '/';
+        });
     })();
 </script>
 </body>
