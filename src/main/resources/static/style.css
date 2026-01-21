@@ -595,34 +595,42 @@ a {
 
 .badge {
     position: absolute;
-    background: rgba(34, 211, 238, 0.95);
+    width: 50%;
+    height: 50%;
+    background: var(--badge-color, rgba(34, 211, 238, 0.95));
     color: #0b0d1a;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .badge-top-left {
-    top: 2px;
-    left: 2px;
+    top: 0;
+    left: 0;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .badge-top-right {
-    top: 2px;
-    right: 2px;
+    top: 0;
+    right: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 .badge-bottom-left {
-    bottom: 2px;
-    left: 2px;
+    bottom: 0;
+    left: 0;
+    clip-path: polygon(0 0, 0 100%, 100% 100%);
 }
 
 .badge-bottom-right {
-    bottom: 2px;
-    right: 2px;
+    bottom: 0;
+    right: 0;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
 .ticket input,
