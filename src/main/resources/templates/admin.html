@@ -163,8 +163,7 @@
         }
         logoutNav.addEventListener('click', event => {
             event.preventDefault();
-            localStorage.removeItem('squares.username');
-            localStorage.removeItem('squares.serviceTicket');
+            localStorage.removeItem('squares.adminUsername');
             localStorage.removeItem('squares.role');
             window.location.href = '/';
         });

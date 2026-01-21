@@ -1,9 +1,12 @@
 (function () {
     const usernameKey = 'squares.username';
+    const adminUsernameKey = 'squares.adminUsername';
     const roleKey = 'squares.role';
     const username = localStorage.getItem(usernameKey);
+    const adminUsername = localStorage.getItem(adminUsernameKey);
     const role = localStorage.getItem(roleKey);
-    if (!username || role !== 'admin') {
+    const authenticatedName = adminUsername || username;
+    if (!authenticatedName || role !== 'admin') {
         const redirect = encodeURIComponent('/admin');
         window.location.href = `/admin-login?redirect=${redirect}`;
         return;
