@@ -56,6 +56,18 @@ Relationships (planned):
 - Board 1—* Square; Board 1—* Wager; Board 1—1 DataFeed.
 - Wager 1—* Transaction; Wager *—* Square (via join table or stored square IDs).
 
+## Data model diagram
+
+This diagram visualizes the planned entities and their relationships (cardinalities).
+
+![Data model diagram](docs/data_model_diagram.png)
+
+## Demo workflow diagram
+
+This diagram summarizes the end-to-end demo flow (admin setup → board purchase → realtime updates → game start → scoring → reset).
+
+![Demo workflow](docs/workflow_diagram.png)
+
 ## Tests
 ```bash
 mvn test
