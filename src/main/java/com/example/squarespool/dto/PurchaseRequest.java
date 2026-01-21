@@ -1,6 +1,5 @@
 package com.example.squarespool.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.List;
 public class PurchaseRequest {
     @NotBlank
     private String sessionId;
-    @NotBlank
     private String customerName;
     @NotEmpty
     private List<Integer> indices;

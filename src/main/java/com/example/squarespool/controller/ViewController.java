@@ -32,4 +32,9 @@ public class ViewController {
     public String login() {
         return "login";
     }
+
+    @GetMapping("/history")
+    public String history() {
+        return "history";
+    }
 }

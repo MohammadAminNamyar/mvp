@@ -21,4 +21,8 @@ public interface SquareRepository extends JpaRepository<Square, Long> {
 
     @Query("select s from Square s where s.status = 'RESERVED' and s.reservedUntil < :now")
     List<Square> findExpiredReservations(@Param("now") Instant now);
+
+    @Query("select s from Square s join fetch s.board b "
+        + "where s.ownerSessionId = :sessionId and b.status = 'FINISHED'")
+    List<Square> findByOwnerSessionIdWithFinishedBoard(@Param("sessionId") String sessionId);
 }
