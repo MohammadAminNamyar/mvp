@@ -22,7 +22,7 @@ public class LobbyController {
 
     @GetMapping("/sports")
     public List<String> listSports() {
-        return List.of("NFL", "NBA", "NCAAB", "NCAAF");
+        return boardService.listSports();
     }
 
     @GetMapping("/sports/{sport}/games")
