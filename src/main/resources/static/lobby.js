@@ -167,17 +167,12 @@
     }
 
     function init() {
-        fetchJson('/api/lobby/sports')
-            .then(sports => {
-                selectedSport = sports[0] || null;
-                renderSports(sports);
-                if (selectedSport) {
-                    loadGames();
-                }
-            })
-            .catch(() => {
-                sportList.innerHTML = '<p class="muted">Unable to load lobby data.</p>';
-            });
+        const sports = ['NFL', 'NBA', 'NCAAB', 'NCAAF'];
+        selectedSport = sports[0] || null;
+        renderSports(sports);
+        if (selectedSport) {
+            loadGames();
+        }
     }
 
     init();

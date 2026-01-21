@@ -8,6 +8,8 @@ import com.example.squarespool.dto.BoardSnapshot;
 import com.example.squarespool.dto.CreateBoardRequest;
 import com.example.squarespool.dto.LobbyBoardResponse;
 import com.example.squarespool.dto.LobbyGameResponse;
+import com.example.squarespool.dto.PlayerHistoryBoard;
+import com.example.squarespool.dto.PlayerHistorySquare;
 import com.example.squarespool.dto.PurchaseRequest;
 import com.example.squarespool.dto.SquareSnapshot;
 import com.example.squarespool.dto.UpdateBoardRequest;
@@ -19,7 +21,6 @@ import com.example.squarespool.model.SquareStatus;
 import com.example.squarespool.repository.BoardRepository;
 import com.example.squarespool.repository.SquareRepository;
 import com.example.squarespool.tpi.TpiClient;
-import com.example.squarespool.tpi.TpiCustomer;
 import com.example.squarespool.tpi.TpiCustomer;
 import com.example.squarespool.tpi.dto.DebitRequest;
 import com.example.squarespool.tpi.dto.DebitResponse;
@@ -44,6 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BoardService {
     private static final Logger log = LoggerFactory.getLogger(BoardService.class);
+    private static final int TOTAL_SQUARES = 100;
+    private static final int FINAL_EMPTY_RAKE_PERCENT = 10;
     private final BoardRepository boardRepository;
     private final SquareRepository squareRepository;
     private final AppProperties appProperties;
@@ -149,6 +152,55 @@ public class BoardService {
     return boardRepository.findAll().stream().map(this::toAdminSummary).toList();
   }
 
+  @Transactional(readOnly = true)
+  public List<PlayerHistoryBoard> getPlayerHistory(String sessionId) {
+    if (sessionId == null || sessionId.isBlank()) {
+      return List.of();
+    }
+    List<Square> ownedSquares = squareRepository.findByOwnerSessionIdWithFinishedBoard(sessionId);
+    if (ownedSquares.isEmpty()) {
+      return List.of();
+    }
+    Map<Long, List<Square>> squaresByBoard =
+        ownedSquares.stream().collect(Collectors.groupingBy(square -> square.getBoard().getId()));
+    List<PlayerHistoryBoard> results = new ArrayList<>();
+    for (Map.Entry<Long, List<Square>> entry : squaresByBoard.entrySet()) {
+      List<Square> userSquares = entry.getValue();
+      Board board = userSquares.get(0).getBoard();
+      List<Square> boardSquares = squareRepository.findByBoardId(board.getId());
+      int purchasedCount =
+          (int) boardSquares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
+      PrizeBreakdown breakdown = computePrizeBreakdown(board, boardSquares, purchasedCount);
+      int ownedCount =
+          (int) userSquares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
+      int totalSpent = ownedCount * board.getPriceCents();
+      int totalWinnings =
+          calculateWinnings(sessionId, ownedCount, boardSquares, breakdown);
+
+      PlayerHistoryBoard response = new PlayerHistoryBoard();
+      response.setBoardId(board.getId());
+      response.setName(board.getName());
+      response.setSportType(board.getSportType());
+      response.setGameName(board.getGameName());
+      response.setHomeTeam(board.getHomeTeam());
+      response.setAwayTeam(board.getAwayTeam());
+      response.setPriceCents(board.getPriceCents());
+      response.setTotalSpentCents(totalSpent);
+      response.setTotalWinningsCents(totalWinnings);
+      response.setNetCents(totalWinnings - totalSpent);
+      response.setFinalPrizeRefunded(breakdown.finalPrizeRefunded());
+      response.setFinalRefundPerPlayerCents(breakdown.finalRefundPerPlayerCents());
+      response.setSquares(
+          userSquares.stream()
+              .sorted((a, b) -> Integer.compare(a.getIdx(), b.getIdx()))
+              .map(this::toPlayerHistorySquare)
+              .toList());
+      results.add(response);
+    }
+    results.sort((a, b) -> Long.compare(b.getBoardId(), a.getBoardId()));
+    return results;
+  }
+
   @Transactional
   public AdminBoardSummary updateBoard(Long boardId, UpdateBoardRequest request) {
     int payoutSum =
@@ -232,6 +284,12 @@ public class BoardService {
       throw new IllegalStateException("Board is locked");
     }
     boolean wasOpen = board.getStatus() == BoardStatus.OPEN;
+    if (request.getCustomerName() == null || request.getCustomerName().isBlank()) {
+      String suffix = request.getSessionId() != null && request.getSessionId().length() >= 6
+          ? request.getSessionId().substring(0, 6)
+          : String.valueOf(request.getSessionId());
+      request.setCustomerName("Guest-" + suffix);
+    }
     TpiCustomer customer =
         tpiClient.resolveCustomer(request.getServiceTicket(), request.getCustomerName());
     Instant now = Instant.now();
@@ -280,6 +338,7 @@ public class BoardService {
     for (Square square : squares) {
       square.setStatus(SquareStatus.TAKEN);
       square.setOwnerName(customer.getDisplayName());
+      square.setOwnerSessionId(request.getSessionId());
       square.setReservedBySessionId(null);
       square.setReservedUntil(null);
     }
@@ -307,6 +366,7 @@ public class BoardService {
                 if (square.getStatus() == SquareStatus.EMPTY || square.getStatus() == SquareStatus.RESERVED) {
                     square.setStatus(SquareStatus.HOUSE);
                     square.setOwnerName("HOUSE");
+                    square.setOwnerSessionId(null);
                     square.setReservedBySessionId(null);
                     square.setReservedUntil(null);
                 }
@@ -379,6 +439,7 @@ public class BoardService {
     for (Square square : squares) {
       square.setStatus(SquareStatus.EMPTY);
       square.setOwnerName(null);
+      square.setOwnerSessionId(null);
       square.setReservedBySessionId(null);
       square.setReservedUntil(null);
       square.setWonQ1(false);
@@ -536,7 +597,7 @@ public class BoardService {
         int purchasedCount = (int) squares.stream().filter(square -> square.getStatus() == SquareStatus.TAKEN).count();
         snapshot.setPurchasedCount(purchasedCount);
         snapshot.setActive(purchasedCount >= board.getMinSquaresToActivate());
-        applyPrizeBreakdown(snapshot, board, purchasedCount);
+        applyPrizeBreakdown(snapshot, board, squares, purchasedCount);
         boolean revealDigits = board.getStatus() != BoardStatus.OPEN;
         snapshot.setDigitsRevealed(revealDigits);
         if (revealDigits) {
@@ -572,23 +633,165 @@ public class BoardService {
         return true;
     }
 
-  private void applyPrizeBreakdown(BoardSnapshot snapshot, Board board, int purchasedCount) {
-    long totalCents = (long) purchasedCount * board.getPriceCents();
-    long houseCut = Math.round(totalCents * (board.getHousePercent() / 100.0));
-    long pool = Math.max(0L, totalCents - houseCut);
-    int q1 = percentOf(pool, board.getPayoutQ1Percent());
-    int q2 = percentOf(pool, board.getPayoutQ2Percent());
-    int q3 = percentOf(pool, board.getPayoutQ3Percent());
-    int q4 = percentOf(pool, board.getPayoutQ4Percent());
-    int sum = q1 + q2 + q3 + q4;
-    int remainder = (int) Math.max(0L, pool - sum);
-    q4 += remainder;
-    snapshot.setPrizePoolCents((int) pool);
-    snapshot.setPrizeQ1Cents(q1);
-    snapshot.setPrizeQ2Cents(q2);
-    snapshot.setPrizeQ3Cents(q3);
-    snapshot.setPrizeQ4Cents(q4);
+  private void applyPrizeBreakdown(BoardSnapshot snapshot,
+                                   Board board,
+                                   List<Square> squares,
+                                   int purchasedCount) {
+    PrizeBreakdown breakdown = computePrizeBreakdown(board, squares, purchasedCount);
+    snapshot.setPrizePoolCents(breakdown.prizePoolCents());
+    snapshot.setPrizeQ1Cents(breakdown.prizeQ1Cents());
+    snapshot.setPrizeQ2Cents(breakdown.prizeQ2Cents());
+    snapshot.setPrizeQ3Cents(breakdown.prizeQ3Cents());
+    snapshot.setPrizeQ4Cents(breakdown.prizeQ4Cents());
+    snapshot.setPrizePerSquareQ1Cents(breakdown.prizePerSquareQ1Cents());
+    snapshot.setPrizePerSquareQ2Cents(breakdown.prizePerSquareQ2Cents());
+    snapshot.setPrizePerSquareQ3Cents(breakdown.prizePerSquareQ3Cents());
+    snapshot.setPrizePerSquareQ4Cents(breakdown.prizePerSquareQ4Cents());
+    snapshot.setPrizeQ1RolledOver(breakdown.prizeQ1RolledOver());
+    snapshot.setPrizeQ2RolledOver(breakdown.prizeQ2RolledOver());
+    snapshot.setPrizeQ3RolledOver(breakdown.prizeQ3RolledOver());
+    snapshot.setFinalPrizeRefunded(breakdown.finalPrizeRefunded());
+    snapshot.setFinalRefundPerPlayerCents(breakdown.finalRefundPerPlayerCents());
   }
+
+    private PrizeBreakdown computePrizeBreakdown(Board board, List<Square> squares, int purchasedCount) {
+        long totalCents = (long) purchasedCount * board.getPriceCents();
+        long houseCut = Math.round(totalCents * (board.getHousePercent() / 100.0));
+        long pool = Math.max(0L, totalCents - houseCut);
+        int q1 = percentOf(pool, board.getPayoutQ1Percent());
+        int q2 = percentOf(pool, board.getPayoutQ2Percent());
+        int q3 = percentOf(pool, board.getPayoutQ3Percent());
+        int q4 = percentOf(pool, board.getPayoutQ4Percent());
+        int sum = q1 + q2 + q3 + q4;
+        int remainder = (int) Math.max(0L, pool - sum);
+        q4 += remainder;
+
+        boolean q1Rolled = false;
+        boolean q2Rolled = false;
+        boolean q3Rolled = false;
+        int rolloverToFinal = 0;
+        if (isConfirmed(board, Quarter.Q1) && isWinningSquareEmpty(squares, Quarter.Q1)) {
+            rolloverToFinal += q1;
+            q1 = 0;
+            q1Rolled = true;
+        }
+        if (isConfirmed(board, Quarter.Q2) && isWinningSquareEmpty(squares, Quarter.Q2)) {
+            rolloverToFinal += q2;
+            q2 = 0;
+            q2Rolled = true;
+        }
+        if (isConfirmed(board, Quarter.Q3) && isWinningSquareEmpty(squares, Quarter.Q3)) {
+            rolloverToFinal += q3;
+            q3 = 0;
+            q3Rolled = true;
+        }
+        q4 += rolloverToFinal;
+
+        boolean finalEmpty = isConfirmed(board, Quarter.Q4) && isWinningSquareEmpty(squares, Quarter.Q4);
+        int finalRefundPerPlayerCents = 0;
+        int perSquareQ4 = perSquareAmount(q4);
+        if (finalEmpty) {
+            int rake = percentOf(q4, FINAL_EMPTY_RAKE_PERCENT);
+            int refundPool = Math.max(0, q4 - rake);
+            long playerCount =
+                squares.stream()
+                    .filter(square -> square.getStatus() == SquareStatus.TAKEN)
+                    .map(Square::getOwnerSessionId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .count();
+            if (playerCount > 0) {
+                finalRefundPerPlayerCents = (int) (refundPool / playerCount);
+            }
+            perSquareQ4 = 0;
+        }
+
+        return new PrizeBreakdown(
+            (int) pool,
+            q1,
+            q2,
+            q3,
+            q4,
+            perSquareAmount(q1),
+            perSquareAmount(q2),
+            perSquareAmount(q3),
+            perSquareQ4,
+            q1Rolled,
+            q2Rolled,
+            q3Rolled,
+            finalEmpty,
+            finalRefundPerPlayerCents
+        );
+    }
+
+    private boolean isConfirmed(Board board, Quarter quarter) {
+        return board.getConfirmedQuarters() != null && board.getConfirmedQuarters().contains(quarter);
+    }
+
+    private boolean isWinningSquareEmpty(List<Square> squares, Quarter quarter) {
+        Square winner = findWinnerSquare(squares, quarter);
+        if (winner == null) {
+            return false;
+        }
+        return winner.getStatus() != SquareStatus.TAKEN && winner.getStatus() != SquareStatus.HOUSE;
+    }
+
+    private int calculateWinnings(String sessionId,
+                                  int ownedCount,
+                                  List<Square> boardSquares,
+                                  PrizeBreakdown breakdown) {
+        int total = 0;
+        total += payoutForQuarter(sessionId, ownedCount, boardSquares, Quarter.Q1,
+            breakdown.prizePerSquareQ1Cents());
+        total += payoutForQuarter(sessionId, ownedCount, boardSquares, Quarter.Q2,
+            breakdown.prizePerSquareQ2Cents());
+        total += payoutForQuarter(sessionId, ownedCount, boardSquares, Quarter.Q3,
+            breakdown.prizePerSquareQ3Cents());
+        if (breakdown.finalPrizeRefunded()) {
+            total += breakdown.finalRefundPerPlayerCents();
+            return total;
+        }
+        total += payoutForQuarter(sessionId, ownedCount, boardSquares, Quarter.Q4,
+            breakdown.prizePerSquareQ4Cents());
+        return total;
+    }
+
+    private int payoutForQuarter(String sessionId,
+                                 int ownedCount,
+                                 List<Square> boardSquares,
+                                 Quarter quarter,
+                                 int perSquareCents) {
+        if (ownedCount <= 0 || perSquareCents <= 0) {
+            return 0;
+        }
+        Square winner = findWinnerSquare(boardSquares, quarter);
+        if (winner == null) {
+            return 0;
+        }
+        if (!Objects.equals(sessionId, winner.getOwnerSessionId())) {
+            return 0;
+        }
+        return perSquareCents * ownedCount;
+    }
+
+    private Square findWinnerSquare(List<Square> squares, Quarter quarter) {
+        return squares.stream()
+            .filter(square -> switch (quarter) {
+                case Q1 -> square.isWonQ1();
+                case Q2 -> square.isWonQ2();
+                case Q3 -> square.isWonQ3();
+                case Q4 -> square.isWonFinal();
+            })
+            .findFirst()
+            .orElse(null);
+    }
+
+    private int perSquareAmount(int totalCents) {
+        if (totalCents <= 0) {
+            return 0;
+        }
+        return (int) Math.round(totalCents / (double) TOTAL_SQUARES);
+    }
 
     private int percentOf(long total, int percent) {
         if (total <= 0 || percent <= 0) {
@@ -667,8 +870,19 @@ public class BoardService {
     } else {
       snapshot.setOwnerName(null);
     }
+    snapshot.setOwnerSessionId(square.getOwnerSessionId());
     snapshot.setReservedBySessionId(square.getReservedBySessionId());
     snapshot.setReservedUntil(square.getReservedUntil());
+    snapshot.setWonQ1(square.isWonQ1());
+    snapshot.setWonQ2(square.isWonQ2());
+    snapshot.setWonQ3(square.isWonQ3());
+    snapshot.setWonFinal(square.isWonFinal());
+    return snapshot;
+  }
+
+  private PlayerHistorySquare toPlayerHistorySquare(Square square) {
+    PlayerHistorySquare snapshot = new PlayerHistorySquare();
+    snapshot.setIdx(square.getIdx());
     snapshot.setWonQ1(square.isWonQ1());
     snapshot.setWonQ2(square.isWonQ2());
     snapshot.setWonQ3(square.isWonQ3());
@@ -760,4 +974,20 @@ public class BoardService {
     debitRequest.setRoundToBeClosed(tpiProperties.isRoundToBeClosed());
     return debitRequest;
   }
+
+    private record PrizeBreakdown(int prizePoolCents,
+                                  int prizeQ1Cents,
+                                  int prizeQ2Cents,
+                                  int prizeQ3Cents,
+                                  int prizeQ4Cents,
+                                  int prizePerSquareQ1Cents,
+                                  int prizePerSquareQ2Cents,
+                                  int prizePerSquareQ3Cents,
+                                  int prizePerSquareQ4Cents,
+                                  boolean prizeQ1RolledOver,
+                                  boolean prizeQ2RolledOver,
+                                  boolean prizeQ3RolledOver,
+                                  boolean finalPrizeRefunded,
+                                  int finalRefundPerPlayerCents) {
+    }
 }
