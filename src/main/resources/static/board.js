@@ -29,6 +29,12 @@
     let previousSnapshot = null;
     let selected = new Set();
 
+    function setText(element, value) {
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
     const elements = {
         name: document.getElementById('board-name'),
         status: document.getElementById('board-status'),
@@ -50,7 +56,6 @@
         digitsStatusDot: document.getElementById('digits-status-dot'),
         lockStatus: document.getElementById('lock-status'),
         lockStatusDot: document.getElementById('lock-status-dot'),
-        historyList: document.getElementById('history-list'),
         prizeGrid: document.getElementById('grid-prizes'),
         scoreboardPrizes: document.getElementById('scoreboard-prizes'),
         scoreboardAwayTeam: document.getElementById('scoreboard-away-team'),
@@ -139,23 +144,22 @@
         if (!snapshot) {
             return;
         }
-        elements.customerName.textContent = displayName;
-        elements.name.textContent = snapshot.name;
-        elements.status.textContent = snapshot.status;
-        elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
-        elements.price.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.house.textContent = snapshot.housePercent;
-        elements.score.textContent = `${snapshot.homeScore} - ${snapshot.awayScore}`;
-        elements.quarter.textContent = snapshot.currentQuarter;
-        elements.requirementPrice.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.requirementHouse.textContent = snapshot.housePercent;
-        elements.minRequired.textContent = snapshot.minSquaresToActivate;
+        setText(elements.customerName, displayName);
+        setText(elements.name, snapshot.name);
+        setText(elements.status, snapshot.status);
+        setText(elements.activation, snapshot.active ? 'Active' : 'Not Active');
+        setText(elements.price, (snapshot.priceCents / 100).toFixed(2));
+        setText(elements.house, snapshot.housePercent);
+        setText(elements.score, `${snapshot.homeScore} - ${snapshot.awayScore}`);
+        setText(elements.quarter, snapshot.currentQuarter);
+        setText(elements.requirementPrice, (snapshot.priceCents / 100).toFixed(2));
+        setText(elements.requirementHouse, snapshot.housePercent);
+        setText(elements.minRequired, snapshot.minSquaresToActivate);
         selected = new Set(snapshot.squares
             .filter(square => square.status === 'RESERVED' && square.reservedBySessionId === sessionId)
             .map(square => square.idx));
         renderSelected();
         renderChecklist();
-        renderHistory();
         renderPrizeBoard();
         renderScoreboard();
         renderGrid();
@@ -336,6 +340,9 @@
     }
 
     function renderChecklist() {
+        if (!elements.digitsStatus || !elements.digitsStatusDot || !elements.lockStatus || !elements.lockStatusDot) {
+            return;
+        }
         const digitsLabel = snapshot.digitsRevealed ? 'Yes (board locked or started)' : 'Hidden until lock';
         elements.digitsStatus.textContent = digitsLabel;
         elements.digitsStatusDot.className = `status-dot ${snapshot.digitsRevealed ? 'locked' : 'warn'}`;
@@ -345,33 +352,10 @@
         elements.lockStatusDot.className = `status-dot ${locked ? 'locked' : 'ok'}`;
     }
 
-    function renderHistory() {
-        const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId)
-            .sort((a, b) => a.idx - b.idx)
-            .slice(0, 12);
-
-        elements.historyList.innerHTML = '';
-        if (takenSquares.length === 0) {
-            const empty = document.createElement('li');
-            empty.textContent = 'No purchases yet for you.';
-            elements.historyList.appendChild(empty);
-            return;
-        }
-
-        takenSquares.forEach(square => {
-            const entry = document.createElement('li');
-            entry.textContent = `#${square.idx} • Mine`;
-            elements.historyList.appendChild(entry);
-        });
-    }
-
     function renderPrizeBoard() {
         if (!elements.prizeGrid) {
             return;
         }
-        const ownedCount = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
             {
                 label: '1ST',
@@ -428,14 +412,6 @@
             }
             card.appendChild(period);
             card.appendChild(amount);
-            const share = document.createElement('div');
-            share.className = 'prize-share';
-            if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
-                share.textContent = `Refund per player: ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
-            } else if (!prize.rolled) {
-                share.textContent = `Your share: ${formatMoney(prize.perSquare * ownedCount)}`;
-            }
-            card.appendChild(share);
             elements.prizeGrid.appendChild(card);
         });
     }
@@ -454,8 +430,6 @@
         setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
         triggerScoreCelebration();
-        const ownedCount = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
             {
                 label: '1ST',
@@ -494,11 +468,8 @@
             item.className = 'scoreboard-prize';
             if (prize.rolled) {
                 item.textContent = `${prize.label} ${prize.period} Rolled`;
-            } else if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
-                item.textContent = `${prize.label} ${prize.period} Refund ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
             } else {
-                const share = formatMoney(prize.perSquare * ownedCount);
-                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)} • Yours ${share}`;
+                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
             }
             elements.scoreboardPrizes.appendChild(item);
         });

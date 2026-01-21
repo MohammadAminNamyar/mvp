@@ -53,22 +53,6 @@
         </section>
         <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
 
-        <section class="hero-card">
-            <div class="hero-heading">
-                <div>
-                    <h1 id="board-name">Board</h1>
-                    <p class="muted">Home team runs across the top. Visiting team runs down the side.</p>
-                </div>
-                <div class="pill-stack">
-                    <span class="status-pill" id="activation-status">Not Active</span>
-                    <span class="status-pill">Price: $<span id="price"></span></span>
-                    <span class="status-pill">House: <span id="house"></span>%</span>
-                    <span class="status-pill">Score: <span id="score"></span></span>
-                    <span class="status-pill">Quarter: <span id="quarter"></span></span>
-                </div>
-            </div>
-        </section>
-
         <section class="content-grid">
             <div class="board-panel card">
                 <div class="panel-header">
@@ -78,7 +62,6 @@
                         <span class="legend-item reserved">Reserved</span>
                         <span class="legend-item mine">Mine</span>
                         <span class="legend-item taken">Taken</span>
-                        <span class="legend-item house">House</span>
                         <span class="legend-item winner">Result</span>
                         <span class="legend-item current">Current Score</span>
                     </div>
@@ -96,40 +79,10 @@
                     <div class="notice" id="ticket-message"></div>
                 </div>
 
-                <div class="card requirement-card">
-                    <h3>MVP Coverage Check</h3>
-                    <ul class="checklist">
-                        <li><span class="status-dot ok"></span> Board size: 10 x 10 squares</li>
-                        <li><span class="status-dot ok"></span> Price per square: $<span id="requirement-price"></span></li>
-                        <li><span class="status-dot ok"></span> House reserve: <span id="requirement-house"></span>%</li>
-                        <li><span class="status-dot" id="digits-status-dot"></span> Row/Column digits revealed: <span id="digits-status"></span></li>
-                        <li><span class="status-dot ok"></span> Min squares to activate: <span id="min-required"></span></li>
-                        <li><span class="status-dot" id="lock-status-dot"></span> Board lock status: <span id="lock-status"></span></li>
-                        <li><span class="status-dot ok"></span> Live winner highlight + quarter badges</li>
-                    </ul>
-                    <div class="footnote">House squares are assigned on lock based on board settings.</div>
-                </div>
-
-                <div class="card history-card">
-                    <h3>Purchase History</h3>
-                    <div class="muted small">Latest confirmed purchases on this board.</div>
-                    <ul id="history-list" class="history-list"></ul>
-                </div>
-
                 <div class="card scoreboard-card">
                     <h3>Prize Board</h3>
                     <div class="muted small">Live prize pool based on purchased squares.</div>
                     <div class="grid-prizes" id="grid-prizes"></div>
-                </div>
-
-                <div class="card future-card">
-                    <h3>Future Features</h3>
-                    <ul class="checklist muted">
-                        <li>Auto-purchase tool for random squares.</li>
-                        <li>Auto-purchase across multiple boards.</li>
-                        <li>Optional return-to-pool for unclaimed lock squares.</li>
-                        <li>Player win/loss history dashboard.</li>
-                    </ul>
                 </div>
             </aside>
         </section>
