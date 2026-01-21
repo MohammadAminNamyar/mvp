@@ -3,6 +3,11 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
+    const currencyFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    });
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
         sessionId = crypto.randomUUID();
@@ -113,12 +118,12 @@
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
-        elements.price.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.house.textContent = snapshot.housePercent;
+        elements.price.textContent = formatCurrency(snapshot.priceCents);
+        elements.house.textContent = formatPercent(snapshot.housePercent);
         elements.score.textContent = `${snapshot.homeScore} - ${snapshot.awayScore}`;
         elements.quarter.textContent = snapshot.currentQuarter;
-        elements.requirementPrice.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.requirementHouse.textContent = snapshot.housePercent;
+        elements.requirementPrice.textContent = formatCurrency(snapshot.priceCents);
+        elements.requirementHouse.textContent = formatPercent(snapshot.housePercent);
         elements.minRequired.textContent = snapshot.minSquaresToActivate;
         selected = new Set(snapshot.squares
             .filter(square => square.status === 'RESERVED' && square.reservedBySessionId === sessionId)
@@ -135,6 +140,22 @@
         } else {
             elements.selected.textContent = Array.from(selected).sort((a, b) => a - b).join(', ');
         }
+    }
+
+    function formatCurrency(amountCents) {
+        if (Number.isNaN(amountCents)) {
+            return '';
+        }
+        return currencyFormatter.format(amountCents / 100);
+    }
+
+    function formatPercent(value) {
+        const number = Number(value);
+        if (Number.isNaN(number)) {
+            return '';
+        }
+        const formatted = Number.isInteger(number) ? number.toString() : number.toFixed(1);
+        return `${formatted}%`;
     }
 
     function renderGrid() {

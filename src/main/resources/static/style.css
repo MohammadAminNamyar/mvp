@@ -577,11 +577,27 @@ a {
 }
 
 .admin-panel {
+    display: grid;
+    gap: 16px;
+    width: min(1100px, 100%);
+    border-radius: 12px;
+}
+
+.admin-columns {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.admin-card {
     background: rgba(22, 27, 43, 0.85);
     padding: 16px;
     border-radius: 12px;
-    max-width: 560px;
     border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-actions {
+    max-width: 680px;
 }
 
 .admin-panel input,

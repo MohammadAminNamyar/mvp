@@ -2,6 +2,11 @@
     const sportList = document.getElementById('sport-list');
     const gamesList = document.getElementById('games-list');
     const gamesEmpty = document.getElementById('games-empty');
+    const currencyFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    });
 
     const state = {
         sports: [],
@@ -92,7 +97,7 @@
                 const betButton = document.createElement('button');
                 betButton.type = 'button';
                 betButton.className = 'chip';
-                betButton.textContent = bet.label;
+                betButton.textContent = formatCurrency(bet.amountCents);
                 betButton.dataset.amountCents = String(bet.amountCents);
                 betButton.addEventListener('click', () => {
                     state.selectedBets.set(game.name, bet.amountCents);
@@ -157,6 +162,13 @@
             grid.appendChild(card);
         });
         container.appendChild(grid);
+    }
+
+    function formatCurrency(amountCents) {
+        if (Number.isNaN(amountCents)) {
+            return '';
+        }
+        return currencyFormatter.format(amountCents / 100);
     }
 
     function loadBoards(gameName, betAmount, container) {
