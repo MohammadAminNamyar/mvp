@@ -310,14 +310,14 @@
 
     function renderHistory() {
         const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' || square.status === 'HOUSE')
+            .filter(square => square.status === 'TAKEN' && square.ownerName === username)
             .sort((a, b) => a.idx - b.idx)
             .slice(0, 12);
 
         elements.historyList.innerHTML = '';
         if (takenSquares.length === 0) {
             const empty = document.createElement('li');
-            empty.textContent = 'No purchases yet. Be the first to claim a square.';
+            empty.textContent = 'No purchases yet for you.';
             elements.historyList.appendChild(empty);
             return;
         }
@@ -325,8 +325,7 @@
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
             const label = square.ownerName ? square.ownerName : 'Taken';
-            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
-            entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
+            entry.textContent = `#${square.idx} • ${label} (Buyer)`;
             elements.historyList.appendChild(entry);
         });
     }

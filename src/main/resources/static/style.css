@@ -740,6 +740,19 @@ a {
     color: #f4f6ff;
 }
 
+.toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.toggle-row input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
 .controls {
     margin-top: 12px;
 }
