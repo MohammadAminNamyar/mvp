@@ -1,34 +1,32 @@
 package com.example.squarespool.dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import com.example.squarespool.model.BoardStatus;
 
-public class CreateBoardRequest {
-    @NotBlank
+public class AdminBoardSummary {
+    private Long id;
     private String name;
-    @NotBlank
     private String sportType;
-    @NotBlank
     private String gameName;
     private String gameId;
-    @NotBlank
     private String homeTeam;
-    @NotBlank
     private String awayTeam;
-    @Min(1)
-    private int priceCents = 500;
-    @Min(0)
-    private int housePercent = 10;
-    @Min(0)
-    private int minSquaresToActivate = 0;
-    @Min(0)
-    private int payoutQ1Percent = 25;
-    @Min(0)
-    private int payoutQ2Percent = 25;
-    @Min(0)
-    private int payoutQ3Percent = 25;
-    @Min(0)
-    private int payoutQ4Percent = 25;
+    private int priceCents;
+    private int housePercent;
+    private int minSquaresToActivate;
+    private int payoutQ1Percent;
+    private int payoutQ2Percent;
+    private int payoutQ3Percent;
+    private int payoutQ4Percent;
+    private BoardStatus status;
+    private int openSquares;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -132,5 +130,21 @@ public class CreateBoardRequest {
 
     public void setPayoutQ4Percent(int payoutQ4Percent) {
         this.payoutQ4Percent = payoutQ4Percent;
+    }
+
+    public BoardStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BoardStatus status) {
+        this.status = status;
+    }
+
+    public int getOpenSquares() {
+        return openSquares;
+    }
+
+    public void setOpenSquares(int openSquares) {
+        this.openSquares = openSquares;
     }
 }

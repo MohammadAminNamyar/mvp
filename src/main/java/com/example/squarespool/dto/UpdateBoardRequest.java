@@ -3,7 +3,7 @@ package com.example.squarespool.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-public class CreateBoardRequest {
+public class UpdateBoardRequest {
     @NotBlank
     private String name;
     @NotBlank

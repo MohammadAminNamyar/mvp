@@ -27,6 +27,10 @@ squares:
   showPurchaserNames: false
   authEnabled: false
   authUserHeader: X-User-Id
+  betAmountsCents:
+    - 200
+    - 500
+    - 1000
 
 logging:
   level:
