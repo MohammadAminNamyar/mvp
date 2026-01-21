@@ -373,12 +373,6 @@
         const ownedCount = snapshot.squares
             .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
-<<<<<<< HEAD
-            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
-=======
             {
                 label: '1ST',
                 period: 'QUARTER',
@@ -407,7 +401,6 @@
                 perSquare: snapshot.prizePerSquareQ4Cents,
                 rolled: false
             }
->>>>>>> origin/dev
         ];
         const adjusted = applyRollover(prizes);
         elements.prizeGrid.innerHTML = '';
@@ -428,15 +421,11 @@
             period.appendChild(sub);
             const amount = document.createElement('div');
             amount.className = 'prize-amount';
-<<<<<<< HEAD
-            amount.textContent = display.vacant ? 'VACANT' : formatMoney(display.cents);
-=======
             if (prize.rolled) {
                 amount.textContent = 'Rolled';
             } else {
                 amount.textContent = formatMoney(prize.cents);
             }
->>>>>>> origin/dev
             card.appendChild(period);
             card.appendChild(amount);
             const share = document.createElement('div');
@@ -468,12 +457,6 @@
         const ownedCount = snapshot.squares
             .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
-<<<<<<< HEAD
-            { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
-            { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
-            { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
-            { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
-=======
             {
                 label: '1ST',
                 period: 'QUARTER',
@@ -502,7 +485,6 @@
                 perSquare: snapshot.prizePerSquareQ4Cents,
                 rolled: false
             }
->>>>>>> origin/dev
         ];
         const adjusted = applyRollover(prizes);
         elements.scoreboardPrizes.innerHTML = '';
@@ -510,13 +492,6 @@
             const display = adjusted[prize.key];
             const item = document.createElement('div');
             item.className = 'scoreboard-prize';
-<<<<<<< HEAD
-            if (snapshot.currentQuarter === prize.key) {
-                item.classList.add('is-current');
-            }
-            const displayText = display.vacant ? 'VACANT' : formatMoney(display.cents);
-            item.textContent = `${prize.label} ${prize.period} ${displayText}`;
-=======
             if (prize.rolled) {
                 item.textContent = `${prize.label} ${prize.period} Rolled`;
             } else if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
@@ -525,7 +500,6 @@
                 const share = formatMoney(prize.perSquare * ownedCount);
                 item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)} • Yours ${share}`;
             }
->>>>>>> origin/dev
             elements.scoreboardPrizes.appendChild(item);
         });
     }

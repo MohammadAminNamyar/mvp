@@ -363,8 +363,12 @@ public class BoardService {
     public void startGame(Long boardId) {
         Board board = loadBoard(boardId);
         long purchasedCount = squareRepository.countByBoardIdAndStatus(boardId, SquareStatus.TAKEN);
-        if (purchasedCount < board.getMinSquaresToActivate()) {
-            throw new IllegalStateException("Not enough squares to activate");
+        int required = Math.max(board.getMinSquaresToActivate(), 35);
+        if (purchasedCount < required) {
+            refundAllBuyIns(board, (int) purchasedCount);
+            resetBoard(boardId);
+            throw new IllegalStateException(
+                    "Board requires at least " + required + " squares. Refunds issued.");
         }
         board.setStatus(BoardStatus.STARTED);
         startGameClock(board);
@@ -889,7 +893,6 @@ public class BoardService {
         }
         int total = counts.values().stream().mapToInt(Integer::intValue).sum();
         if (total == 0) {
-            recordPayout(board, Quarter.Q4, amountCents, null, "HOUSE");
             return;
         }
         class Share {
@@ -927,6 +930,14 @@ public class BoardService {
             }
             recordPayout(board, Quarter.Q4, share.amount, null, share.owner);
         }
+    }
+
+    private void refundAllBuyIns(Board board, int purchasedCount) {
+        if (purchasedCount <= 0) {
+            return;
+        }
+        int totalRefundCents = purchasedCount * board.getPriceCents();
+        recordRefunds(board, totalRefundCents);
     }
 
     private void recordRollover(Board board, Quarter quarter, int amountCents, int winnerIdx) {

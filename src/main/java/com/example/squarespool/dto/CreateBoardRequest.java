@@ -22,7 +22,7 @@ public class CreateBoardRequest {
     @Min(0)
     private int housePercent = 10;
     @Min(0)
-    private int minSquaresToActivate = 0;
+    private int minSquaresToActivate = 35;
     @DecimalMin("0.0")
     @DecimalMax("100.0")
     private double payoutQ1Percent = 12.5;
