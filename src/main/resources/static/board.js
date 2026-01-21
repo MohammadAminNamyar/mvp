@@ -319,10 +319,10 @@
 
     function addBadge(cell, square) {
         const badges = [];
-        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left' });
-        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right' });
-        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left' });
-        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right' });
+        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left', color: 'rgba(56, 189, 248, 0.95)' });
+        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right', color: 'rgba(167, 139, 250, 0.95)' });
+        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left', color: 'rgba(52, 211, 153, 0.95)' });
+        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right', color: 'rgba(251, 191, 36, 0.95)' });
         if (badges.length === 0) {
             return;
         }
@@ -330,6 +330,7 @@
             const badge = document.createElement('div');
             badge.className = `badge badge-${entry.position}`;
             badge.textContent = entry.label;
+            badge.style.setProperty('--badge-color', entry.color);
             cell.appendChild(badge);
         });
     }
