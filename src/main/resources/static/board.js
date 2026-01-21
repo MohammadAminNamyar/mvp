@@ -3,7 +3,6 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
-    const displayNameKey = 'squares.displayName';
     const ticketKey = 'squares.serviceTicket';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
@@ -11,18 +10,10 @@
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
-    let displayName = username;
-    if (!displayName) {
-        displayName = localStorage.getItem(displayNameKey);
-        if (!displayName) {
-            displayName = `Guest-${sessionId.slice(0, 6)}`;
-            localStorage.setItem(displayNameKey, displayName);
-        }
-    }
     const loginNav = document.getElementById('login-nav');
     const serviceTicket = localStorage.getItem(ticketKey);
     if (loginNav) {
-        loginNav.textContent = displayName;
+        loginNav.textContent = username || 'Guest';
     }
 
     let snapshot = null;
@@ -46,7 +37,6 @@
         selected: document.getElementById('selected'),
         confirm: document.getElementById('confirm-btn'),
         customerName: document.getElementById('customer-name'),
-        changeUser: document.getElementById('change-user'),
         message: document.getElementById('ticket-message'),
         viewerCount: document.getElementById('viewer-count'),
         requirementPrice: document.getElementById('requirement-price'),
@@ -101,11 +91,15 @@
     }
 
     function purchase() {
-        let customerName = displayName.trim();
+        if (!serviceTicket) {
+            const redirect = encodeURIComponent(window.location.pathname);
+            window.location.href = `/login?redirect=${redirect}`;
+            return;
+        }
+        const customerName = (username || '').trim();
         if (!customerName) {
-            displayName = `Guest-${sessionId.slice(0, 6)}`;
-            localStorage.setItem(displayNameKey, displayName);
-            customerName = displayName;
+            elements.message.textContent = 'Enter a display name.';
+            return;
         }
         const indices = Array.from(selected);
         if (indices.length === 0) {
@@ -144,7 +138,7 @@
         if (!snapshot) {
             return;
         }
-        setText(elements.customerName, displayName);
+        setText(elements.customerName, username);
         setText(elements.name, snapshot.name);
         setText(elements.status, snapshot.status);
         setText(elements.activation, snapshot.active ? 'Active' : 'Not Active');
@@ -609,11 +603,6 @@
             closePurchaseModal();
         });
     }
-    elements.changeUser.addEventListener('click', () => {
-        const redirect = encodeURIComponent(window.location.pathname);
-        window.location.href = `/login?redirect=${redirect}`;
-    });
-
     fetchSnapshot();
 
     const socket = new SockJS('/ws');
