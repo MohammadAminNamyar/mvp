@@ -29,6 +29,12 @@
     let previousSnapshot = null;
     let selected = new Set();
 
+    function setText(element, value) {
+        if (element) {
+            element.textContent = value;
+        }
+    }
+
     const elements = {
         name: document.getElementById('board-name'),
         status: document.getElementById('board-status'),
@@ -138,17 +144,17 @@
         if (!snapshot) {
             return;
         }
-        elements.customerName.textContent = displayName;
-        elements.name.textContent = snapshot.name;
-        elements.status.textContent = snapshot.status;
-        elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
-        elements.price.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.house.textContent = snapshot.housePercent;
-        elements.score.textContent = `${snapshot.homeScore} - ${snapshot.awayScore}`;
-        elements.quarter.textContent = snapshot.currentQuarter;
-        elements.requirementPrice.textContent = (snapshot.priceCents / 100).toFixed(2);
-        elements.requirementHouse.textContent = snapshot.housePercent;
-        elements.minRequired.textContent = snapshot.minSquaresToActivate;
+        setText(elements.customerName, displayName);
+        setText(elements.name, snapshot.name);
+        setText(elements.status, snapshot.status);
+        setText(elements.activation, snapshot.active ? 'Active' : 'Not Active');
+        setText(elements.price, (snapshot.priceCents / 100).toFixed(2));
+        setText(elements.house, snapshot.housePercent);
+        setText(elements.score, `${snapshot.homeScore} - ${snapshot.awayScore}`);
+        setText(elements.quarter, snapshot.currentQuarter);
+        setText(elements.requirementPrice, (snapshot.priceCents / 100).toFixed(2));
+        setText(elements.requirementHouse, snapshot.housePercent);
+        setText(elements.minRequired, snapshot.minSquaresToActivate);
         selected = new Set(snapshot.squares
             .filter(square => square.status === 'RESERVED' && square.reservedBySessionId === sessionId)
             .map(square => square.idx));
@@ -334,6 +340,9 @@
     }
 
     function renderChecklist() {
+        if (!elements.digitsStatus || !elements.digitsStatusDot || !elements.lockStatus || !elements.lockStatusDot) {
+            return;
+        }
         const digitsLabel = snapshot.digitsRevealed ? 'Yes (board locked or started)' : 'Hidden until lock';
         elements.digitsStatus.textContent = digitsLabel;
         elements.digitsStatusDot.className = `status-dot ${snapshot.digitsRevealed ? 'locked' : 'warn'}`;
