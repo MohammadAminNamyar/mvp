@@ -132,7 +132,14 @@ public class BoardService {
 
   @Transactional(readOnly = true)
   public List<BetOption> listBetOptions() {
-    return appProperties.getBetAmountsCents().stream()
+    return boardRepository.findDistinctPriceCentsOrderByPriceCentsAsc().stream()
+        .map(amount -> new BetOption(amount, String.format("$%d", amount / 100)))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BetOption> listBetOptionsByGame(String gameId) {
+    return boardRepository.findDistinctPriceCentsByGameIdOrderByPriceCentsAsc(gameId).stream()
         .map(amount -> new BetOption(amount, String.format("$%d", amount / 100)))
         .toList();
   }

@@ -2,7 +2,6 @@
     const sportList = document.getElementById('sport-list');
     const gamesList = document.getElementById('games-list');
 
-    let betOptions = [];
     let selectedSport = null;
 
     function fetchJson(url) {
@@ -81,33 +80,13 @@
             const boardsContainer = document.createElement('div');
             boardsContainer.className = 'boards-container';
 
-            betOptions.forEach((option, index) => {
-                const betButton = document.createElement('button');
-                betButton.type = 'button';
-                betButton.className = 'bet-button';
-                betButton.textContent = formatBetLabel(option);
-                betButton.addEventListener('click', () => {
-                    betButtons.querySelectorAll('.bet-button').forEach(btn => btn.classList.remove('active'));
-                    betButton.classList.add('active');
-                    loadBoards(game.gameId, option.cents, boardsContainer);
-                });
-                if (index === 0) {
-                    betButton.classList.add('active');
-                }
-                betButtons.appendChild(betButton);
-            });
-
             betRow.appendChild(betButtons);
             card.appendChild(header);
             card.appendChild(betRow);
             card.appendChild(boardsContainer);
             gamesList.appendChild(card);
 
-            if (betOptions.length) {
-                loadBoards(game.gameId, betOptions[0].cents, boardsContainer);
-            } else {
-                boardsContainer.innerHTML = '<p class="muted">No bet amounts configured.</p>';
-            }
+            loadBetOptions(game, betButtons, boardsContainer);
         });
     }
 
@@ -145,6 +124,36 @@
             });
     }
 
+    function loadBetOptions(game, betButtons, boardsContainer) {
+        fetchJson(`/api/lobby/games/${encodeURIComponent(game.gameId)}/bets`)
+            .then(options => {
+                betButtons.innerHTML = '';
+                if (!options.length) {
+                    boardsContainer.innerHTML = '<p class="muted">No bet amounts configured for this game.</p>';
+                    return;
+                }
+                options.forEach((option, index) => {
+                    const betButton = document.createElement('button');
+                    betButton.type = 'button';
+                    betButton.className = 'bet-button';
+                    betButton.textContent = formatBetLabel(option);
+                    betButton.addEventListener('click', () => {
+                        betButtons.querySelectorAll('.bet-button').forEach(btn => btn.classList.remove('active'));
+                        betButton.classList.add('active');
+                        loadBoards(game.gameId, option.cents, boardsContainer);
+                    });
+                    if (index === 0) {
+                        betButton.classList.add('active');
+                    }
+                    betButtons.appendChild(betButton);
+                });
+                loadBoards(game.gameId, options[0].cents, boardsContainer);
+            })
+            .catch(() => {
+                boardsContainer.innerHTML = '<p class="muted">Unable to load bet options right now.</p>';
+            });
+    }
+
     function loadGames() {
         if (!selectedSport) {
             gamesList.innerHTML = '';
@@ -158,9 +167,8 @@
     }
 
     function init() {
-        Promise.all([fetchJson('/api/lobby/sports'), fetchJson('/api/lobby/bets')])
-            .then(([sports, bets]) => {
-                betOptions = bets || [];
+        fetchJson('/api/lobby/sports')
+            .then(sports => {
                 selectedSport = sports[0] || null;
                 renderSports(sports);
                 if (selectedSport) {
