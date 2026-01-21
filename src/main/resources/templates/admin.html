@@ -60,24 +60,23 @@
                     <div id="board-list" class="admin-board-list"></div>
                     <button id="refresh-boards">Refresh Boards</button>
                 </section>
+                <section class="admin-card admin-actions">
+                    <h2>Board Actions</h2>
+                    <input type="number" id="board-id" placeholder="Board ID" />
+                    <button id="start-game">Start Game (Lock)</button>
+                    <input type="number" id="home-score" placeholder="Home score" value="0" />
+                    <input type="number" id="away-score" placeholder="Away score" value="0" />
+                    <button id="update-score">Update Score</button>
+                    <select id="quarter-select">
+                        <option value="Q1">Confirm Q1 (1st)</option>
+                        <option value="Q2">Confirm Q2 (half)</option>
+                        <option value="Q3">Confirm Q3 (3rd)</option>
+                        <option value="Q4">Confirm Q4 (final)</option>
+                    </select>
+                    <button id="confirm-quarter">Confirm Quarter</button>
+                    <button id="reset-board">Reset Board</button>
+                </section>
             </div>
-
-            <section class="admin-card admin-actions">
-                <h2>Board Actions</h2>
-                <input type="number" id="board-id" placeholder="Board ID" />
-                <button id="start-game">Start Game (Lock)</button>
-                <input type="number" id="home-score" placeholder="Home score" value="0" />
-                <input type="number" id="away-score" placeholder="Away score" value="0" />
-                <button id="update-score">Update Score</button>
-                <select id="quarter-select">
-                    <option value="Q1">Confirm Q1 (1st)</option>
-                    <option value="Q2">Confirm Q2 (half)</option>
-                    <option value="Q3">Confirm Q3 (3rd)</option>
-                    <option value="Q4">Confirm Q4 (final)</option>
-                </select>
-                <button id="confirm-quarter">Confirm Quarter</button>
-                <button id="reset-board">Reset Board</button>
-            </section>
 
             <p class="notice" id="admin-message"></p>
         </div>

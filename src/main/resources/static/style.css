@@ -612,6 +612,19 @@ a {
     color: #f4f6ff;
 }
 
+.toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.toggle-row input {
+    margin: 0;
+    width: auto;
+    padding: 0;
+}
+
 .admin-board-list {
     margin-top: 8px;
     display: grid;
