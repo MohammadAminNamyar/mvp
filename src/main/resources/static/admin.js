@@ -25,6 +25,7 @@
     const payoutQ3Input = document.getElementById('payout-q3');
     const payoutQ4Input = document.getElementById('payout-q4');
     const boardIdInput = document.getElementById('board-id');
+    const actionGameIdInput = document.getElementById('action-game-id');
     const homeScoreInput = document.getElementById('home-score');
     const awayScoreInput = document.getElementById('away-score');
     const gameClockInput = document.getElementById('game-clock');
@@ -34,6 +35,7 @@
     const boardList = document.getElementById('admin-board-list');
     const fixtureEndpoint = '/api/fixtures';
     let fixtures = [];
+    let boardsById = new Map();
 
     function tokenHeader() {
         return { 'X-Admin-Token': adminTokenInput.value.trim() };
@@ -121,6 +123,9 @@
         sportTypeInput.value = board.sportType || '';
         gameNameInput.value = board.gameName || '';
         gameIdInput.value = board.gameId || '';
+        if (actionGameIdInput) {
+            actionGameIdInput.value = board.gameId || '';
+        }
         homeTeamInput.value = board.homeTeam || '';
         awayTeamInput.value = board.awayTeam || '';
         priceCentsInput.value = board.priceCents || 0;
@@ -132,7 +137,13 @@
         payoutQ4Input.value = board.payoutQ4Percent || 0;
     }
 
+    function boardHasWagers(board) {
+        const totalSquares = board.totalSquares ?? 100;
+        return (board.openSquares ?? totalSquares) < totalSquares;
+    }
+
     function renderBoards(boards) {
+        boardsById = new Map(boards.map(board => [String(board.id), board]));
         boardList.innerHTML = '';
         if (!boards.length) {
             boardList.innerHTML = '<p class="muted">No boards created yet.</p>';
@@ -142,6 +153,7 @@
             const item = document.createElement('div');
             item.className = 'board-item-card';
             const openSquares = board.openSquares ?? 0;
+            const hasWagers = boardHasWagers(board);
             item.innerHTML = `
                 <div class="board-item-header">
                     <strong>${board.name}</strong>
@@ -151,13 +163,19 @@
                 <div class="muted small">Open squares: ${openSquares}</div>
                 <div class="board-item-actions">
                     <button type="button" data-action="select">Select</button>
-                    <button type="button" data-action="delete" class="secondary-btn">Remove</button>
+                    <button type="button" data-action="delete" class="secondary-btn" ${hasWagers ? 'disabled' : ''}>
+                        ${hasWagers ? 'Remove (locked)' : 'Remove'}
+                    </button>
                 </div>
             `;
             item.querySelector('[data-action="select"]').addEventListener('click', () => {
                 populateForm(board);
             });
             item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                if (boardHasWagers(board)) {
+                    message.textContent = 'Boards with wagers cannot be removed.';
+                    return;
+                }
                 if (window.confirm(`Remove ${board.name}? This cannot be undone.`)) {
                     deleteBoard(board.id);
                 }
@@ -234,6 +252,9 @@
                 notifySuccess(`Board created with ID ${board.id}.`);
                 boardIdInput.value = board.id;
                 gameIdInput.value = board.gameId || gameIdInput.value;
+                if (actionGameIdInput) {
+                    actionGameIdInput.value = board.gameId || actionGameIdInput.value;
+                }
                 loadBoards();
             })
             .catch(err => {
@@ -271,6 +292,9 @@
             .then(board => {
                 notifySuccess('Board updated.');
                 populateForm(board);
+                if (actionGameIdInput) {
+                    actionGameIdInput.value = board.gameId || actionGameIdInput.value;
+                }
                 loadBoards();
             })
             .catch(err => {
@@ -315,6 +339,23 @@
 
     document.getElementById('confirm-quarter').addEventListener('click', () => {
         const boardId = boardIdInput.value;
+        const quarterMap = {
+            Q1: '1st',
+            Q2: 'half',
+            Q3: '3rd',
+            Q4: 'final'
+        };
+        const quarterLabel = quarterMap[quarterSelect.value] || quarterSelect.value;
+        const homeLabel = homeTeamInput.value || 'Home';
+        const awayLabel = awayTeamInput.value || 'Away';
+        const confirmMessage = [
+            `You are about to payout ${quarterLabel} quarter for game ${homeLabel} vs ${awayLabel}.`,
+            `Home: ${homeScoreInput.value}`,
+            `Away: ${awayScoreInput.value}`
+        ].join('\n');
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
         fetch(`/admin/boards/${boardId}/confirm-quarter`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
@@ -324,7 +365,7 @@
         })
             .then(handleResponse)
             .then(() => {
-                notifySuccess('Quarter confirmed.');
+                notifySuccess('Payout confirmed.');
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -352,6 +393,11 @@
             message.textContent = 'Enter a board ID to delete.';
             return;
         }
+        const board = boardsById.get(String(boardId));
+        if (board && boardHasWagers(board)) {
+            message.textContent = 'Boards with wagers cannot be removed.';
+            return;
+        }
         if (window.confirm(`Delete board ${boardId}? This cannot be undone.`)) {
             deleteBoard(boardId);
         }
@@ -369,8 +415,16 @@
         }
         const homeTitle = fixture.homeTeam?.title || '';
         const awayTitle = fixture.visitingTeam?.title || '';
+        const gameTitle = fixture.title || fixture.name || '';
+        const sportTitle = fixture.sport?.title || fixture.sportType || '';
         homeTeamInput.value = homeTitle;
         awayTeamInput.value = awayTitle;
+        if (gameTitle) {
+            gameNameInput.value = gameTitle;
+        }
+        if (sportTitle) {
+            sportTypeInput.value = sportTitle;
+        }
     });
 
     loadSettings();
