@@ -9,6 +9,9 @@
 
     const adminTokenInput = document.getElementById('admin-token');
     const boardNameInput = document.getElementById('board-name');
+    const sportTypeInput = document.getElementById('sport-type');
+    const gameNameInput = document.getElementById('game-name');
+    const gameIdInput = document.getElementById('game-id');
     const homeTeamInput = document.getElementById('home-team');
     const awayTeamInput = document.getElementById('away-team');
     const priceCentsInput = document.getElementById('price-cents');
@@ -25,6 +28,7 @@
     const quarterSelect = document.getElementById('quarter-select');
     const message = document.getElementById('admin-message');
     const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
+    const boardList = document.getElementById('admin-board-list');
 
     function tokenHeader() {
         return { 'X-Admin-Token': adminTokenInput.value.trim() };
@@ -58,6 +62,82 @@
             });
     }
 
+    function populateForm(board) {
+        boardIdInput.value = board.id;
+        boardNameInput.value = board.name || '';
+        sportTypeInput.value = board.sportType || '';
+        gameNameInput.value = board.gameName || '';
+        gameIdInput.value = board.gameId || '';
+        homeTeamInput.value = board.homeTeam || '';
+        awayTeamInput.value = board.awayTeam || '';
+        priceCentsInput.value = board.priceCents || 0;
+        housePercentInput.value = board.housePercent || 0;
+        minActivateInput.value = board.minSquaresToActivate || 0;
+        payoutQ1Input.value = board.payoutQ1Percent || 0;
+        payoutQ2Input.value = board.payoutQ2Percent || 0;
+        payoutQ3Input.value = board.payoutQ3Percent || 0;
+        payoutQ4Input.value = board.payoutQ4Percent || 0;
+    }
+
+    function renderBoards(boards) {
+        boardList.innerHTML = '';
+        if (!boards.length) {
+            boardList.innerHTML = '<p class="muted">No boards created yet.</p>';
+            return;
+        }
+        boards.forEach(board => {
+            const item = document.createElement('div');
+            item.className = 'board-item-card';
+            const openSquares = board.openSquares ?? 0;
+            item.innerHTML = `
+                <div class="board-item-header">
+                    <strong>${board.name}</strong>
+                    <span class="status-pill">${board.status}</span>
+                </div>
+                <div class="muted small">${board.sportType || 'Sport'} • ${board.gameName || 'Game'}</div>
+                <div class="muted small">Open squares: ${openSquares}</div>
+                <div class="board-item-actions">
+                    <button type="button" data-action="select">Select</button>
+                    <button type="button" data-action="delete" class="secondary-btn">Remove</button>
+                </div>
+            `;
+            item.querySelector('[data-action="select"]').addEventListener('click', () => {
+                populateForm(board);
+            });
+            item.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                if (window.confirm(`Remove ${board.name}? This cannot be undone.`)) {
+                    deleteBoard(board.id);
+                }
+            });
+            boardList.appendChild(item);
+        });
+    }
+
+    function loadBoards() {
+        fetch('/admin/boards', { headers: tokenHeader() })
+            .then(handleResponse)
+            .then(res => res.json())
+            .then(renderBoards)
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    }
+
+    function deleteBoard(boardId) {
+        fetch(`/admin/boards/${boardId}`, {
+            method: 'DELETE',
+            headers: tokenHeader()
+        })
+            .then(handleResponse)
+            .then(() => {
+                notifySuccess('Board removed.');
+                loadBoards();
+            })
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    }
+
     document.getElementById('save-settings').addEventListener('click', () => {
         fetch('/admin/settings', {
             method: 'POST',
@@ -81,6 +161,9 @@
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
                 name: boardNameInput.value,
+                sportType: sportTypeInput.value,
+                gameName: gameNameInput.value,
+                gameId: gameIdInput.value,
                 homeTeam: homeTeamInput.value,
                 awayTeam: awayTeamInput.value,
                 priceCents: Number(priceCentsInput.value),
@@ -97,6 +180,45 @@
             .then(board => {
                 notifySuccess(`Board created with ID ${board.id}.`);
                 boardIdInput.value = board.id;
+                gameIdInput.value = board.gameId || gameIdInput.value;
+                loadBoards();
+            })
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    });
+
+    document.getElementById('update-board').addEventListener('click', () => {
+        const boardId = boardIdInput.value;
+        if (!boardId) {
+            message.textContent = 'Enter a board ID to update.';
+            return;
+        }
+        fetch(`/admin/boards/${boardId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...tokenHeader() },
+            body: JSON.stringify({
+                name: boardNameInput.value,
+                sportType: sportTypeInput.value,
+                gameName: gameNameInput.value,
+                gameId: gameIdInput.value,
+                homeTeam: homeTeamInput.value,
+                awayTeam: awayTeamInput.value,
+                priceCents: Number(priceCentsInput.value),
+                housePercent: Number(housePercentInput.value),
+                minSquaresToActivate: Number(minActivateInput.value),
+                payoutQ1Percent: Number(payoutQ1Input.value),
+                payoutQ2Percent: Number(payoutQ2Input.value),
+                payoutQ3Percent: Number(payoutQ3Input.value),
+                payoutQ4Percent: Number(payoutQ4Input.value)
+            })
+        })
+            .then(handleResponse)
+            .then(res => res.json())
+            .then(board => {
+                notifySuccess('Board updated.');
+                populateForm(board);
+                loadBoards();
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -171,5 +293,17 @@
             });
     });
 
+    document.getElementById('delete-board').addEventListener('click', () => {
+        const boardId = boardIdInput.value;
+        if (!boardId) {
+            message.textContent = 'Enter a board ID to delete.';
+            return;
+        }
+        if (window.confirm(`Delete board ${boardId}? This cannot be undone.`)) {
+            deleteBoard(boardId);
+        }
+    });
+
     loadSettings();
+    loadBoards();
 })();

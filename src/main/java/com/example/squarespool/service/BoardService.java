@@ -2,10 +2,15 @@ package com.example.squarespool.service;
 
 import com.example.squarespool.config.AppProperties;
 import com.example.squarespool.config.TpiProperties;
+import com.example.squarespool.dto.AdminBoardSummary;
+import com.example.squarespool.dto.BetOption;
 import com.example.squarespool.dto.BoardSnapshot;
 import com.example.squarespool.dto.CreateBoardRequest;
+import com.example.squarespool.dto.LobbyBoardResponse;
+import com.example.squarespool.dto.LobbyGameResponse;
 import com.example.squarespool.dto.PurchaseRequest;
 import com.example.squarespool.dto.SquareSnapshot;
+import com.example.squarespool.dto.UpdateBoardRequest;
 import com.example.squarespool.model.Board;
 import com.example.squarespool.model.BoardStatus;
 import com.example.squarespool.model.Quarter;
@@ -23,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +77,13 @@ public class BoardService {
     }
     Board board = new Board();
     board.setName(request.getName());
+    board.setSportType(request.getSportType());
+    board.setGameName(request.getGameName());
+    String gameId =
+        request.getGameId() != null && !request.getGameId().isBlank()
+            ? request.getGameId()
+            : UUID.randomUUID().toString();
+    board.setGameId(gameId);
     board.setHomeTeam(request.getHomeTeam());
     board.setAwayTeam(request.getAwayTeam());
     board.setPriceCents(request.getPriceCents());
@@ -82,19 +95,7 @@ public class BoardService {
     board.setPayoutQ4Percent(request.getPayoutQ4Percent());
     Board saved = boardRepository.save(board);
 
-    List<Square> squares = new ArrayList<>();
-    for (int row = 0; row < 10; row++) {
-      for (int col = 0; col < 10; col++) {
-        Square square = new Square();
-        square.setBoard(saved);
-        square.setRowIndex(row);
-        square.setColIndex(col);
-        square.setIdx(row * 10 + col);
-        square.setStatus(SquareStatus.EMPTY);
-        squares.add(square);
-      }
-    }
-    squareRepository.saveAll(squares);
+    initializeSquares(saved);
     broadcastSnapshot(saved.getId());
     return saved;
   }
@@ -102,6 +103,79 @@ public class BoardService {
   @Transactional(readOnly = true)
   public List<Board> listBoards() {
     return boardRepository.findAll();
+  }
+
+  @Transactional(readOnly = true)
+  public List<String> listSports() {
+    return boardRepository.findDistinctSportTypes();
+  }
+
+  @Transactional(readOnly = true)
+  public List<LobbyGameResponse> listGamesBySport(String sportType) {
+    List<Board> boards = boardRepository.findBySportTypeIgnoreCase(sportType);
+    Map<String, Board> games = new LinkedHashMap<>();
+    for (Board board : boards) {
+      if (board.getGameId() == null || board.getGameId().isBlank()) {
+        continue;
+      }
+      games.putIfAbsent(board.getGameId(), board);
+    }
+    return games.values().stream().map(this::toLobbyGame).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<LobbyBoardResponse> listBoardsByGameAndBet(String gameId, int priceCents) {
+    List<Board> boards =
+        boardRepository.findByGameIdAndPriceCentsOrderByCreatedAtAsc(gameId, priceCents);
+    return boards.stream().map(this::toLobbyBoard).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BetOption> listBetOptions() {
+    return appProperties.getBetAmountsCents().stream()
+        .map(amount -> new BetOption(amount, String.format("$%d", amount / 100)))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<AdminBoardSummary> listAdminBoards() {
+    return boardRepository.findAll().stream().map(this::toAdminSummary).toList();
+  }
+
+  @Transactional
+  public AdminBoardSummary updateBoard(Long boardId, UpdateBoardRequest request) {
+    int payoutSum =
+        request.getPayoutQ1Percent()
+            + request.getPayoutQ2Percent()
+            + request.getPayoutQ3Percent()
+            + request.getPayoutQ4Percent();
+    if (payoutSum != 100) {
+      throw new IllegalStateException("Payout percentages must total 100");
+    }
+    Board board = loadBoard(boardId);
+    board.setName(request.getName());
+    board.setSportType(request.getSportType());
+    board.setGameName(request.getGameName());
+    if (request.getGameId() != null && !request.getGameId().isBlank()) {
+      board.setGameId(request.getGameId());
+    }
+    board.setHomeTeam(request.getHomeTeam());
+    board.setAwayTeam(request.getAwayTeam());
+    board.setPriceCents(request.getPriceCents());
+    board.setHousePercent(request.getHousePercent());
+    board.setMinSquaresToActivate(request.getMinSquaresToActivate());
+    board.setPayoutQ1Percent(request.getPayoutQ1Percent());
+    board.setPayoutQ2Percent(request.getPayoutQ2Percent());
+    board.setPayoutQ3Percent(request.getPayoutQ3Percent());
+    board.setPayoutQ4Percent(request.getPayoutQ4Percent());
+    Board saved = boardRepository.save(board);
+    return toAdminSummary(saved);
+  }
+
+  @Transactional
+  public void deleteBoard(Long boardId) {
+    squareRepository.deleteByBoardId(boardId);
+    boardRepository.deleteById(boardId);
   }
 
   @Transactional(readOnly = true)
@@ -150,6 +224,7 @@ public class BoardService {
     if (EnumSet.of(BoardStatus.STARTED, BoardStatus.FINISHED).contains(board.getStatus())) {
       throw new IllegalStateException("Board is locked");
     }
+    boolean wasOpen = board.getStatus() == BoardStatus.OPEN;
     TpiCustomer customer =
         tpiClient.resolveCustomer(request.getServiceTicket(), request.getCustomerName());
     Instant now = Instant.now();
@@ -203,8 +278,9 @@ public class BoardService {
     }
     squareRepository.saveAll(squares);
 
-    if (board.getStatus() == BoardStatus.OPEN && isBoardFull(boardId)) {
+    if (wasOpen && isBoardFull(boardId)) {
       lockBoard(board);
+      createFollowUpBoard(board);
     }
     broadcastSnapshot(boardId);
   }
@@ -353,6 +429,36 @@ public class BoardService {
     boardRepository.save(board);
   }
 
+  private void createFollowUpBoard(Board board) {
+    if (board.getGameId() == null || board.getGameId().isBlank()) {
+      return;
+    }
+    long existing =
+        boardRepository.countByGameIdAndPriceCents(board.getGameId(), board.getPriceCents());
+    int nextIndex = (int) existing + 1;
+    String baseName =
+        board.getGameName() != null && !board.getGameName().isBlank()
+            ? board.getGameName()
+            : "Board";
+    String boardLabel = baseName.equals("Board") ? "Board" : baseName + " Board";
+    Board nextBoard = new Board();
+    nextBoard.setName(String.format("%s #%d", boardLabel, nextIndex));
+    nextBoard.setSportType(board.getSportType());
+    nextBoard.setGameName(board.getGameName());
+    nextBoard.setGameId(board.getGameId());
+    nextBoard.setHomeTeam(board.getHomeTeam());
+    nextBoard.setAwayTeam(board.getAwayTeam());
+    nextBoard.setPriceCents(board.getPriceCents());
+    nextBoard.setHousePercent(board.getHousePercent());
+    nextBoard.setMinSquaresToActivate(board.getMinSquaresToActivate());
+    nextBoard.setPayoutQ1Percent(board.getPayoutQ1Percent());
+    nextBoard.setPayoutQ2Percent(board.getPayoutQ2Percent());
+    nextBoard.setPayoutQ3Percent(board.getPayoutQ3Percent());
+    nextBoard.setPayoutQ4Percent(board.getPayoutQ4Percent());
+    Board saved = boardRepository.save(nextBoard);
+    initializeSquares(saved);
+  }
+
   private void ensureDigits(Board board) {
     if (board.getRowDigits() == null || board.getColDigits() == null) {
       board.setRowDigits(joinDigits(generateDigits()));
@@ -485,6 +591,73 @@ public class BoardService {
   public void broadcastSnapshot(Long boardId) {
     BoardSnapshot snapshot = getSnapshot(boardId);
     messagingTemplate.convertAndSend("/topic/boards/" + boardId + "/snapshot", snapshot);
+  }
+
+  private void initializeSquares(Board board) {
+    List<Square> squares = new ArrayList<>();
+    for (int row = 0; row < 10; row++) {
+      for (int col = 0; col < 10; col++) {
+        Square square = new Square();
+        square.setBoard(board);
+        square.setRowIndex(row);
+        square.setColIndex(col);
+        square.setIdx(row * 10 + col);
+        square.setStatus(SquareStatus.EMPTY);
+        squares.add(square);
+      }
+    }
+    squareRepository.saveAll(squares);
+  }
+
+  private LobbyGameResponse toLobbyGame(Board board) {
+    LobbyGameResponse response = new LobbyGameResponse();
+    response.setGameId(board.getGameId());
+    response.setName(
+        board.getGameName() != null && !board.getGameName().isBlank()
+            ? board.getGameName()
+            : String.format("%s vs %s", board.getHomeTeam(), board.getAwayTeam()));
+    response.setHomeTeam(board.getHomeTeam());
+    response.setAwayTeam(board.getAwayTeam());
+    return response;
+  }
+
+  private LobbyBoardResponse toLobbyBoard(Board board) {
+    LobbyBoardResponse response = new LobbyBoardResponse();
+    response.setId(board.getId());
+    response.setName(board.getName());
+    response.setStatus(board.getStatus());
+    int openSquares = countOpenSquares(board.getId());
+    response.setOpenSquares(openSquares);
+    response.setTotalSquares(100);
+    response.setFull(openSquares == 0);
+    return response;
+  }
+
+  public AdminBoardSummary toAdminSummary(Board board) {
+    AdminBoardSummary summary = new AdminBoardSummary();
+    summary.setId(board.getId());
+    summary.setName(board.getName());
+    summary.setSportType(board.getSportType());
+    summary.setGameName(board.getGameName());
+    summary.setGameId(board.getGameId());
+    summary.setHomeTeam(board.getHomeTeam());
+    summary.setAwayTeam(board.getAwayTeam());
+    summary.setPriceCents(board.getPriceCents());
+    summary.setHousePercent(board.getHousePercent());
+    summary.setMinSquaresToActivate(board.getMinSquaresToActivate());
+    summary.setPayoutQ1Percent(board.getPayoutQ1Percent());
+    summary.setPayoutQ2Percent(board.getPayoutQ2Percent());
+    summary.setPayoutQ3Percent(board.getPayoutQ3Percent());
+    summary.setPayoutQ4Percent(board.getPayoutQ4Percent());
+    summary.setStatus(board.getStatus());
+    summary.setOpenSquares(countOpenSquares(board.getId()));
+    return summary;
+  }
+
+  private int countOpenSquares(Long boardId) {
+    long empty = squareRepository.countByBoardIdAndStatus(boardId, SquareStatus.EMPTY);
+    long reserved = squareRepository.countByBoardIdAndStatus(boardId, SquareStatus.RESERVED);
+    return (int) (empty + reserved);
   }
 
   private DebitRequest buildDebitRequest(Board board, PurchaseRequest request, long amountCents) {
