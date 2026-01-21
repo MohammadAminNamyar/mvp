@@ -9,4 +9,4 @@ ENV SERVER_PORT=8080
 EXPOSE 8080
 
 ENV JAR_FILE=bin/square-game.jar
-
+ENTRYPOINT ["java", "-jar", "/srv/square-game/bin/square-game.jar"]
