@@ -1,5 +1,6 @@
 package com.example.squarespool.config;
 
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "squares")
@@ -10,6 +11,7 @@ public class AppProperties {
     private boolean showPurchaserNames = false;
     private boolean authEnabled = false;
     private String authUserHeader = "X-User-Id";
+    private List<Integer> betAmountsCents = List.of(200, 500, 1000);
 
     public int getReservationTtlSeconds() {
         return reservationTtlSeconds;
@@ -57,5 +59,13 @@ public class AppProperties {
 
     public void setAuthUserHeader(String authUserHeader) {
         this.authUserHeader = authUserHeader;
+    }
+
+    public List<Integer> getBetAmountsCents() {
+        return betAmountsCents;
+    }
+
+    public void setBetAmountsCents(List<Integer> betAmountsCents) {
+        this.betAmountsCents = betAmountsCents;
     }
 }
