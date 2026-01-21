@@ -1126,7 +1126,13 @@ public class BoardService {
     summary.setPayoutQ3Percent(board.getPayoutQ3Percent());
     summary.setPayoutQ4Percent(board.getPayoutQ4Percent());
     summary.setStatus(board.getStatus());
-    summary.setOpenSquares(countOpenSquares(board.getId()));
+    int openSquares = countOpenSquares(board.getId());
+    int totalSquares = TOTAL_SQUARES;
+    int purchasedSquares = Math.max(0, totalSquares - openSquares);
+    long revenueCents = (long) purchasedSquares * board.getPriceCents();
+    summary.setOpenSquares(openSquares);
+    summary.setTotalSquares(totalSquares);
+    summary.setRevenueCents(revenueCents);
     return summary;
   }
 

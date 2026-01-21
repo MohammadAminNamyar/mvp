@@ -36,9 +36,15 @@
     const message = document.getElementById('admin-message');
     const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
     const boardList = document.getElementById('admin-board-list');
+    const totalRevenueLabel = document.getElementById('total-revenue');
     const fixtureEndpoint = '/api/fixtures';
     let fixtures = [];
     let boardsById = new Map();
+
+    function formatMoney(cents) {
+        const value = Number(cents || 0) / 100;
+        return value.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+    }
 
     function applyPayoutDefaults(sportType) {
         const normalized = (sportType || '').trim().toLowerCase();
@@ -163,6 +169,10 @@
     function renderBoards(boards) {
         boardsById = new Map(boards.map(board => [String(board.id), board]));
         boardList.innerHTML = '';
+        const totalRevenueCents = boards.reduce((total, board) => total + Number(board.revenueCents || 0), 0);
+        if (totalRevenueLabel) {
+            totalRevenueLabel.textContent = formatMoney(totalRevenueCents);
+        }
         if (!boards.length) {
             boardList.innerHTML = '<p class="muted">No boards created yet.</p>';
             return;
@@ -171,6 +181,9 @@
             const item = document.createElement('div');
             item.className = 'board-item-card';
             const openSquares = board.openSquares ?? 0;
+            const totalSquares = board.totalSquares ?? 100;
+            const purchasedSquares = Math.max(0, totalSquares - openSquares);
+            const revenueCents = board.revenueCents ?? (purchasedSquares * (board.priceCents ?? 0));
             const hasWagers = boardHasWagers(board);
             item.innerHTML = `
                 <div class="board-item-header">
@@ -179,6 +192,7 @@
                 </div>
                 <div class="muted small">${board.sportType || 'Sport'} • ${board.gameName || 'Game'}</div>
                 <div class="muted small">Open squares: ${openSquares}</div>
+                <div class="muted small">Revenue: ${formatMoney(revenueCents)}</div>
                 <div class="board-item-actions">
                     <button type="button" data-action="select">Select</button>
                     <button type="button" data-action="delete" class="secondary-btn" ${hasWagers ? 'disabled' : ''}>
