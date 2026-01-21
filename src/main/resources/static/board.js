@@ -10,11 +10,15 @@
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    const loginNav = document.getElementById('login-nav');
     const serviceTicket = localStorage.getItem(ticketKey);
     if (!username) {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;
         return;
+    }
+    if (loginNav) {
+        loginNav.textContent = username;
     }
 
     let snapshot = null;
@@ -51,7 +55,8 @@
         scoreboardHomeScore: document.getElementById('scoreboard-home-score'),
         scoreboardClock: document.getElementById('scoreboard-clock'),
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
-        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo')
+        scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
+        loginNav
     };
 
     function fetchSnapshot() {
