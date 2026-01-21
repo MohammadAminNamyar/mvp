@@ -53,6 +53,20 @@ public class TpiStubClient implements TpiClient {
         return response;
     }
 
+    @Override
+    public DebitResponse credit(DebitRequest request) {
+        DebitResponse response = new DebitResponse();
+        response.setResponseCode(0L);
+        response.setResponseMessage("CREDITED");
+        response.setAleaRoundId(UUID.randomUUID().toString());
+        response.setAleaTransactionId("credit-" + UUID.randomUUID());
+        if (request != null && request.getAmount() != null) {
+            MoneyAmount amount = request.getAmount();
+            response.setAleaAccountBalance(new MoneyAmount(amount.getCurrency(), amount.getValue()));
+        }
+        return response;
+    }
+
     private String safeId(String raw) {
         if (raw == null || raw.isBlank()) {
             return "anon";
