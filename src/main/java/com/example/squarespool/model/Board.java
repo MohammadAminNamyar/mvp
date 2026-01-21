@@ -52,6 +52,7 @@ public class Board {
     private int gameClockSeconds;
     private boolean gameClockRunning;
     private Instant gameClockUpdatedAt;
+    private int rolloverCents;
 
     @Enumerated(EnumType.STRING)
     private Quarter currentQuarter = Quarter.Q1;
@@ -244,6 +245,14 @@ public class Board {
 
     public void setGameClockUpdatedAt(Instant gameClockUpdatedAt) {
         this.gameClockUpdatedAt = gameClockUpdatedAt;
+    }
+
+    public int getRolloverCents() {
+        return rolloverCents;
+    }
+
+    public void setRolloverCents(int rolloverCents) {
+        this.rolloverCents = rolloverCents;
     }
 
     public Quarter getCurrentQuarter() {

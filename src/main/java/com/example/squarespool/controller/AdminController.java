@@ -66,7 +66,9 @@ public class AdminController {
     @GetMapping("/settings")
     public AdminSettingsResponse getSettings(@RequestHeader("X-Admin-Token") String token) {
         validateToken(token);
-        return new AdminSettingsResponse(appProperties.isShowPurchaserNames());
+        return new AdminSettingsResponse(
+                appProperties.isShowPurchaserNames(),
+                appProperties.isRolloverOnNoWinner());
     }
 
     @PostMapping("/settings")
@@ -75,6 +77,7 @@ public class AdminController {
                                @Valid @RequestBody AdminSettingsRequest request) {
         validateToken(token);
         appProperties.setShowPurchaserNames(request.isShowPurchaserNames());
+        appProperties.setRolloverOnNoWinner(request.isRolloverOnNoWinner());
     }
 
     @PostMapping("/boards/{id}/start")

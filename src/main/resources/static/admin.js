@@ -31,6 +31,7 @@
     const quarterSelect = document.getElementById('quarter-select');
     const message = document.getElementById('admin-message');
     const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
+    const rolloverToggle = document.getElementById('rollover-no-winner');
     const boardList = document.getElementById('admin-board-list');
     const fixtureEndpoint = '/api/fixtures';
     let fixtures = [];
@@ -61,6 +62,9 @@
             .then(res => res.json())
             .then(settings => {
                 showPurchaserNamesToggle.checked = settings.showPurchaserNames;
+                if (rolloverToggle) {
+                    rolloverToggle.checked = settings.rolloverOnNoWinner;
+                }
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -196,7 +200,8 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
-                showPurchaserNames: showPurchaserNamesToggle.checked
+                showPurchaserNames: showPurchaserNamesToggle.checked,
+                rolloverOnNoWinner: rolloverToggle ? rolloverToggle.checked : false
             })
         })
             .then(handleResponse)

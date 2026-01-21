@@ -11,6 +11,7 @@ public class AppProperties {
   private boolean showPurchaserNames = false;
   private boolean authEnabled = false;
   private String authUserHeader = "X-User-Id";
+  private boolean rolloverOnNoWinner = true;
   private List<Integer> betAmountsCents = List.of(200, 500, 1000);
   private String fixturesBaseUrl = "http://mock01.dev.alea.ca:5000";
 
@@ -60,6 +61,14 @@ public class AppProperties {
 
   public void setAuthUserHeader(String authUserHeader) {
     this.authUserHeader = authUserHeader;
+  }
+
+  public boolean isRolloverOnNoWinner() {
+    return rolloverOnNoWinner;
+  }
+
+  public void setRolloverOnNoWinner(boolean rolloverOnNoWinner) {
+    this.rolloverOnNoWinner = rolloverOnNoWinner;
   }
 
   public List<Integer> getBetAmountsCents() {

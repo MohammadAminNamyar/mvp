@@ -13,17 +13,20 @@ import com.example.squarespool.dto.SquareSnapshot;
 import com.example.squarespool.dto.UpdateBoardRequest;
 import com.example.squarespool.model.Board;
 import com.example.squarespool.model.BoardStatus;
+import com.example.squarespool.model.PayoutEvent;
+import com.example.squarespool.model.PayoutEventType;
 import com.example.squarespool.model.Quarter;
 import com.example.squarespool.model.Square;
 import com.example.squarespool.model.SquareStatus;
 import com.example.squarespool.repository.BoardRepository;
+import com.example.squarespool.repository.PayoutEventRepository;
 import com.example.squarespool.repository.SquareRepository;
 import com.example.squarespool.tpi.TpiClient;
-import com.example.squarespool.tpi.TpiCustomer;
 import com.example.squarespool.tpi.TpiCustomer;
 import com.example.squarespool.tpi.dto.DebitRequest;
 import com.example.squarespool.tpi.dto.DebitResponse;
 import com.example.squarespool.tpi.dto.MoneyAmount;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,19 +53,22 @@ public class BoardService {
     private final TpiProperties tpiProperties;
     private final TpiClient tpiClient;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PayoutEventRepository payoutEventRepository;
 
     public BoardService(BoardRepository boardRepository,
                         SquareRepository squareRepository,
                         AppProperties appProperties,
                         TpiProperties tpiProperties,
                         TpiClient tpiClient,
-                        SimpMessagingTemplate messagingTemplate) {
+                        SimpMessagingTemplate messagingTemplate,
+                        PayoutEventRepository payoutEventRepository) {
         this.boardRepository = boardRepository;
         this.squareRepository = squareRepository;
         this.appProperties = appProperties;
         this.tpiProperties = tpiProperties;
         this.tpiClient = tpiClient;
         this.messagingTemplate = messagingTemplate;
+        this.payoutEventRepository = payoutEventRepository;
     }
 
   @Transactional
@@ -343,6 +349,26 @@ public class BoardService {
     ensureDigits(board);
     int winnerIdx = computeWinnerIdx(board);
     Square winner = loadSquare(boardId, winnerIdx);
+    int purchasedCount =
+        (int) squareRepository.countByBoardIdAndStatus(boardId, SquareStatus.TAKEN);
+    int prizeCents = prizeCentsForQuarter(board, purchasedCount, quarter);
+    int rollover = board.getRolloverCents();
+    if (appProperties.isRolloverOnNoWinner() && rollover > 0) {
+      prizeCents += rollover;
+      board.setRolloverCents(0);
+    }
+    boolean playerWinner =
+        winner.getStatus() == SquareStatus.TAKEN
+            && winner.getOwnerName() != null
+            && !winner.getOwnerName().equalsIgnoreCase("HOUSE");
+    if (playerWinner) {
+      recordPayout(board, quarter, prizeCents, winnerIdx, winner.getOwnerName());
+    } else if (appProperties.isRolloverOnNoWinner() && quarter != Quarter.Q4) {
+      board.setRolloverCents(prizeCents);
+      recordRollover(board, quarter, prizeCents, winnerIdx);
+    } else {
+      recordPayout(board, quarter, prizeCents, winnerIdx, "HOUSE");
+    }
     switch (quarter) {
       case Q1 -> winner.setWonQ1(true);
       case Q2 -> winner.setWonQ2(true);
@@ -371,6 +397,7 @@ public class BoardService {
         board.setGameClockSeconds(0);
         board.setGameClockRunning(false);
         board.setGameClockUpdatedAt(null);
+        board.setRolloverCents(0);
         board.setCurrentQuarter(Quarter.Q1);
         board.getConfirmedQuarters().clear();
         boardRepository.save(board);
@@ -562,7 +589,7 @@ public class BoardService {
             board.setGameClockUpdatedAt(now);
             return false;
         }
-        long deltaSeconds = Math.max(0, java.time.Duration.between(lastUpdate, now).getSeconds());
+        long deltaSeconds = Math.max(0, Duration.between(lastUpdate, now).getSeconds());
         if (deltaSeconds == 0) {
             return false;
         }
@@ -597,6 +624,47 @@ public class BoardService {
         return (int) Math.round(total * (percent / 100.0));
     }
 
+    private int prizeCentsForQuarter(Board board, int purchasedCount, Quarter quarter) {
+        long totalCents = (long) purchasedCount * board.getPriceCents();
+        long houseCut = Math.round(totalCents * (board.getHousePercent() / 100.0));
+        long pool = Math.max(0L, totalCents - houseCut);
+        int q1 = percentOf(pool, board.getPayoutQ1Percent());
+        int q2 = percentOf(pool, board.getPayoutQ2Percent());
+        int q3 = percentOf(pool, board.getPayoutQ3Percent());
+        int q4 = percentOf(pool, board.getPayoutQ4Percent());
+        int sum = q1 + q2 + q3 + q4;
+        int remainder = (int) Math.max(0L, pool - sum);
+        q4 += remainder;
+        return switch (quarter) {
+            case Q1 -> q1;
+            case Q2 -> q2;
+            case Q3 -> q3;
+            case Q4 -> q4;
+        };
+    }
+
+    private void recordPayout(Board board, Quarter quarter, int amountCents, int winnerIdx, String recipient) {
+        PayoutEvent event = new PayoutEvent();
+        event.setBoard(board);
+        event.setQuarter(quarter);
+        event.setEventType(PayoutEventType.PAY);
+        event.setRecipient(recipient);
+        event.setAmountCents(amountCents);
+        event.setWinnerSquareIdx(winnerIdx);
+        payoutEventRepository.save(event);
+    }
+
+    private void recordRollover(Board board, Quarter quarter, int amountCents, int winnerIdx) {
+        PayoutEvent event = new PayoutEvent();
+        event.setBoard(board);
+        event.setQuarter(quarter);
+        event.setEventType(PayoutEventType.ROLLOVER);
+        event.setRecipient("ROLLOVER");
+        event.setAmountCents(amountCents);
+        event.setWinnerSquareIdx(winnerIdx);
+        payoutEventRepository.save(event);
+    }
+
     private void startGameClock(Board board) {
         board.setGameClockSeconds(0);
         board.setGameClock("00:00");
@@ -622,7 +690,7 @@ public class BoardService {
     private String resolveGameClock(Board board) {
         if (board.isGameClockRunning() && board.getGameClockUpdatedAt() != null) {
             Instant now = Instant.now();
-            long deltaSeconds = Math.max(0, java.time.Duration.between(board.getGameClockUpdatedAt(), now).getSeconds());
+            long deltaSeconds = Math.max(0, Duration.between(board.getGameClockUpdatedAt(), now).getSeconds());
             int computed = board.getGameClockSeconds() + (int) deltaSeconds;
             return formatClock(computed);
         }

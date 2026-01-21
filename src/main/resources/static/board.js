@@ -56,11 +56,8 @@
         scoreboardClock: document.getElementById('scoreboard-clock'),
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
         scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
-<<<<<<< HEAD
-        confettiLayer: document.getElementById('confetti-layer')
-=======
+        confettiLayer: document.getElementById('confetti-layer'),
         loginNav
->>>>>>> origin/dev
     };
 
     function fetchSnapshot() {
