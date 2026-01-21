@@ -27,6 +27,9 @@ public class Board {
     private Long id;
 
     private String name;
+    private String sportType;
+    private String gameName;
+    private String gameId;
     private String homeTeam;
     private String awayTeam;
     private int priceCents;
@@ -73,6 +76,30 @@ public class Board {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSportType() {
+        return sportType;
+    }
+
+    public void setSportType(String sportType) {
+        this.sportType = sportType;
+    }
+
+    public String getGameName() {
+        return gameName;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
+    }
+
+    public String getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
     public String getHomeTeam() {

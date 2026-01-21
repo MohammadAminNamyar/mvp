@@ -6,6 +6,8 @@
     const submitButton = form.querySelector('button[type="submit"]');
     const usernameKey = 'squares.username';
     const ticketKey = 'squares.serviceTicket';
+    const roleKey = 'squares.role';
+    const loginRole = document.body.dataset.loginRole || 'user';
     const loginEndpoint = '/api/auth/login';
 
     const params = new URLSearchParams(window.location.search);
@@ -57,6 +59,7 @@
             }
             localStorage.setItem(usernameKey, username);
             localStorage.setItem(ticketKey, serviceTicket);
+            localStorage.setItem(roleKey, loginRole);
             window.location.href = redirect;
         } catch (error) {
             message.textContent = 'Unable to reach the authentication service right now.';

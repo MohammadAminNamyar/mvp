@@ -10,11 +10,15 @@
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    const loginNav = document.getElementById('login-nav');
     const serviceTicket = localStorage.getItem(ticketKey);
     if (!username) {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;
         return;
+    }
+    if (loginNav) {
+        loginNav.textContent = username;
     }
 
     let snapshot = null;
@@ -52,7 +56,11 @@
         scoreboardClock: document.getElementById('scoreboard-clock'),
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
         scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
+<<<<<<< HEAD
         confettiLayer: document.getElementById('confetti-layer')
+=======
+        loginNav
+>>>>>>> origin/dev
     };
 
     function fetchSnapshot() {
@@ -306,14 +314,14 @@
 
     function renderHistory() {
         const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' || square.status === 'HOUSE')
+            .filter(square => square.status === 'TAKEN' && square.ownerName === username)
             .sort((a, b) => a.idx - b.idx)
             .slice(0, 12);
 
         elements.historyList.innerHTML = '';
         if (takenSquares.length === 0) {
             const empty = document.createElement('li');
-            empty.textContent = 'No purchases yet. Be the first to claim a square.';
+            empty.textContent = 'No purchases yet for you.';
             elements.historyList.appendChild(empty);
             return;
         }
@@ -321,8 +329,7 @@
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
             const label = square.ownerName ? square.ownerName : 'Taken';
-            const statusLabel = square.status === 'HOUSE' ? 'House' : 'Buyer';
-            entry.textContent = `#${square.idx} • ${label} (${statusLabel})`;
+            entry.textContent = `#${square.idx} • ${label} (Buyer)`;
             elements.historyList.appendChild(entry);
         });
     }

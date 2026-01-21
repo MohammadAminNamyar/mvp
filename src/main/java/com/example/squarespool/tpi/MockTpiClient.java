@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 public class MockTpiClient implements TpiClient {
-    private final RestClient restClient;
+  private final RestClient restClient;
 
     public MockTpiClient(RestClient.Builder restClientBuilder, TpiProperties properties) {
         this.restClient = restClientBuilder.baseUrl(properties.getBaseUrl()).build();

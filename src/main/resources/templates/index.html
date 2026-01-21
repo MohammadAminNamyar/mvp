@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Squares Pool</title>
+    <title>Squares Pools Lobby</title>
     <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="theme-dark">
@@ -12,12 +12,13 @@
             <span class="logo">■</span>
             <div>
                 <div class="brand-title">Squares Pool</div>
-                <div class="brand-subtitle">MVP Lobby</div>
+                <div class="brand-subtitle">Squares Pools Lobby</div>
             </div>
         </div>
         <nav class="nav-actions">
             <a class="nav-link" href="/login" id="login-nav">Login</a>
-            <a class="nav-link" href="/admin">Admin Console</a>
+            <a class="nav-link" href="/admin" id="admin-nav">Admin Console</a>
+            <a class="nav-link" href="#" id="logout-nav">Logout</a>
         </nav>
     </header>
 
@@ -25,33 +26,75 @@
         <section class="hero-card">
             <div class="hero-heading">
                 <div>
-                    <h1>Squares Pool MVP</h1>
-                    <p class="muted">Open a board to purchase squares and track winners in real time.</p>
+                    <h1>Squares Pools Lobby</h1>
+                    <p class="muted">Pick a sport, choose a game, and jump into the board that matches your bet.</p>
+                </div>
+                <div class="pill-stack">
+                    <span class="status-pill">Live Boards</span>
+                    <span class="status-pill">Real-time Updates</span>
+                    <span class="status-pill">Multiple Bet Levels</span>
                 </div>
             </div>
         </section>
 
-        <div class="card">
-            <h2>Boards</h2>
-            <ul>
-                <li th:if="${#lists.isEmpty(boards)}">No boards yet. Create one in Admin.</li>
-                <li th:each="board : ${boards}">
-                    <a th:href="@{/boards/{id}/view(id=${board.id})}" th:text="${board.name}">Board</a>
-                    (<span th:text="${board.homeTeam}">Home</span> vs <span th:text="${board.awayTeam}">Away</span>)
-                </li>
-            </ul>
-        </div>
+        <section class="lobby-grid">
+            <div class="card lobby-panel">
+                <h2>Sport Types</h2>
+                <div id="sport-list" class="sport-list"></div>
+            </div>
+            <div class="card lobby-panel">
+                <h2>Available Games</h2>
+                <div id="games-list" class="games-list"></div>
+            </div>
+        </section>
 
-        <p class="notice">Use the admin page to start the game, lock boards, and confirm quarters.</p>
+        <section class="card terms-card">
+            <details class="terms-details">
+                <summary>Terms and Conditions</summary>
+                <div class="terms-content">
+                    <p>
+                        Squares games are based on a 10x10 grid with random digits assigned after the board locks.
+                        Purchased squares are final, and payouts are based on the last digit of each team’s score
+                        at the end of each quarter. Please review the house percentage and minimum squares required
+                        to activate each board before purchasing.
+                    </p>
+                    <p>
+                        The house reserves the right to void any purchase that violates platform rules or local
+                        regulations. Participants must be of legal age to play. By purchasing a square, you agree to
+                        these terms and the posted payout structure.
+                    </p>
+                </div>
+            </details>
+        </section>
     </main>
 </div>
 
+<script src="/lobby.js"></script>
 <script>
     (function () {
         const loginNav = document.getElementById('login-nav');
+        const logoutNav = document.getElementById('logout-nav');
         const username = localStorage.getItem('squares.username');
+        const role = localStorage.getItem('squares.role');
+        const adminNav = document.getElementById('admin-nav');
         if (loginNav && username) {
             loginNav.textContent = username;
+        }
+        if (adminNav && role !== 'admin') {
+            adminNav.remove();
+        }
+        if (logoutNav) {
+            if (!username) {
+                logoutNav.remove();
+            } else {
+                logoutNav.addEventListener('click', event => {
+                    event.preventDefault();
+                    localStorage.removeItem('squares.username');
+                    localStorage.removeItem('squares.serviceTicket');
+                    localStorage.removeItem('squares.role');
+                    window.location.href = '/';
+                });
+            }
         }
     })();
 </script>

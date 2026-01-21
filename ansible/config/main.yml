@@ -1,0 +1,25 @@
+---
+# this configuration is used by docker-compose-app ansible playbook to deploy this application.
+# variables documentation: https://git.alea.ca/ansible/playbooks/docker-compose-app
+# always prefix your variables with the name of your application.
+
+# default application configuration
+application_name: square-game
+application_servers: square-game_servers
+application_docker_image: "{{ application_docker_registry }}/amin.namyar/mvp-c"
+application_docker_version: "{{ build_metadata.playbook_tag | default('latest') }}"
+
+# environment variables
+application_environment_variables:
+
+# ports configuration
+app_port: 8080
+app_check_port: "{{ app_port }}"
+app_prometheus_agent_port: 8021
+
+# healthcheck configuration
+application_healthcheck_path: ""
+application_healthcheck_port: "{{ app_check_port }}"
+application_port_environment_variables:
+  SERVER_PORT: "{{ app_port }}"
+  PROMETHEUS_AGENT_PORT: "{{ app_prometheus_agent_port }}"
