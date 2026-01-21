@@ -11,6 +11,7 @@
 
     const adminTokenInput = document.getElementById('admin-token');
     const boardNameInput = document.getElementById('board-name');
+    const fixtureSelect = document.getElementById('fixture-select');
     const sportTypeInput = document.getElementById('sport-type');
     const gameNameInput = document.getElementById('game-name');
     const gameIdInput = document.getElementById('game-id');
@@ -31,6 +32,8 @@
     const message = document.getElementById('admin-message');
     const showPurchaserNamesToggle = document.getElementById('show-purchaser-names');
     const boardList = document.getElementById('admin-board-list');
+    const fixtureEndpoint = '/api/fixtures';
+    let fixtures = [];
 
     function tokenHeader() {
         return { 'X-Admin-Token': adminTokenInput.value.trim() };
@@ -58,6 +61,54 @@
             .then(res => res.json())
             .then(settings => {
                 showPurchaserNamesToggle.checked = settings.showPurchaserNames;
+            })
+            .catch(err => {
+                message.textContent = err.message;
+            });
+    }
+
+    function renderFixtures(list) {
+        fixtureSelect.innerHTML = '<option value="">Select a fixture</option>';
+        if (!list.length) {
+            return;
+        }
+        list.forEach((fixture, index) => {
+            const option = document.createElement('option');
+            const title = fixture?.title || `Fixture ${index + 1}`;
+            option.value = title;
+            option.textContent = title;
+            option.dataset.index = String(index);
+            fixtureSelect.appendChild(option);
+        });
+    }
+
+    function extractFixtureList(data) {
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (data && Array.isArray(data.fixtures)) {
+            return data.fixtures;
+        }
+        if (data && Array.isArray(data.games)) {
+            return data.games;
+        }
+        if (data && Array.isArray(data.data)) {
+            return data.data;
+        }
+        return [];
+    }
+
+    function loadFixtures() {
+        fetch(fixtureEndpoint)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Unable to load fixtures.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                fixtures = extractFixtureList(data);
+                renderFixtures(fixtures);
             })
             .catch(err => {
                 message.textContent = err.message;
@@ -306,6 +357,23 @@
         }
     });
 
+    fixtureSelect.addEventListener('change', () => {
+        const selectedOption = fixtureSelect.options[fixtureSelect.selectedIndex];
+        if (!selectedOption || selectedOption.value === '') {
+            return;
+        }
+        const fixtureIndex = Number(selectedOption.dataset.index);
+        const fixture = fixtures[fixtureIndex];
+        if (!fixture) {
+            return;
+        }
+        const homeTitle = fixture.homeTeam?.title || '';
+        const awayTitle = fixture.visitingTeam?.title || '';
+        homeTeamInput.value = homeTitle;
+        awayTeamInput.value = awayTitle;
+    });
+
     loadSettings();
     loadBoards();
+    loadFixtures();
 })();
