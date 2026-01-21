@@ -50,7 +50,6 @@
         digitsStatusDot: document.getElementById('digits-status-dot'),
         lockStatus: document.getElementById('lock-status'),
         lockStatusDot: document.getElementById('lock-status-dot'),
-        historyList: document.getElementById('history-list'),
         prizeGrid: document.getElementById('grid-prizes'),
         scoreboardPrizes: document.getElementById('scoreboard-prizes'),
         scoreboardAwayTeam: document.getElementById('scoreboard-away-team'),
@@ -155,7 +154,6 @@
             .map(square => square.idx));
         renderSelected();
         renderChecklist();
-        renderHistory();
         renderPrizeBoard();
         renderScoreboard();
         renderGrid();
@@ -345,33 +343,10 @@
         elements.lockStatusDot.className = `status-dot ${locked ? 'locked' : 'ok'}`;
     }
 
-    function renderHistory() {
-        const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId)
-            .sort((a, b) => a.idx - b.idx)
-            .slice(0, 12);
-
-        elements.historyList.innerHTML = '';
-        if (takenSquares.length === 0) {
-            const empty = document.createElement('li');
-            empty.textContent = 'No purchases yet for you.';
-            elements.historyList.appendChild(empty);
-            return;
-        }
-
-        takenSquares.forEach(square => {
-            const entry = document.createElement('li');
-            entry.textContent = `#${square.idx} • Mine`;
-            elements.historyList.appendChild(entry);
-        });
-    }
-
     function renderPrizeBoard() {
         if (!elements.prizeGrid) {
             return;
         }
-        const ownedCount = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
             {
                 label: '1ST',
@@ -428,14 +403,6 @@
             }
             card.appendChild(period);
             card.appendChild(amount);
-            const share = document.createElement('div');
-            share.className = 'prize-share';
-            if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
-                share.textContent = `Refund per player: ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
-            } else if (!prize.rolled) {
-                share.textContent = `Your share: ${formatMoney(prize.perSquare * ownedCount)}`;
-            }
-            card.appendChild(share);
             elements.prizeGrid.appendChild(card);
         });
     }
@@ -454,8 +421,6 @@
         setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
         triggerScoreCelebration();
-        const ownedCount = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
             {
                 label: '1ST',
@@ -494,11 +459,8 @@
             item.className = 'scoreboard-prize';
             if (prize.rolled) {
                 item.textContent = `${prize.label} ${prize.period} Rolled`;
-            } else if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
-                item.textContent = `${prize.label} ${prize.period} Refund ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
             } else {
-                const share = formatMoney(prize.perSquare * ownedCount);
-                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)} • Yours ${share}`;
+                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)}`;
             }
             elements.scoreboardPrizes.appendChild(item);
         });
