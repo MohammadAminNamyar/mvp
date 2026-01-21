@@ -57,7 +57,12 @@
         scoreboardAwayLogo: document.getElementById('scoreboard-away-logo'),
         scoreboardHomeLogo: document.getElementById('scoreboard-home-logo'),
         confettiLayer: document.getElementById('confetti-layer'),
-        loginNav
+        purchaseModal: document.getElementById('purchase-modal'),
+        purchaseCount: document.getElementById('purchase-count'),
+        purchaseTotal: document.getElementById('purchase-total'),
+        purchaseConfirm: document.getElementById('purchase-confirm'),
+        purchaseCancel: document.getElementById('purchase-cancel'),
+        purchaseBackdrop: document.getElementById('purchase-backdrop')
     };
 
     function fetchSnapshot() {
@@ -238,7 +243,19 @@
         if (!square) {
             return;
         }
-        cell.classList.remove('empty', 'reserved-me', 'reserved-other', 'taken', 'house', 'current-winner', 'flash');
+        cell.classList.remove(
+            'empty',
+            'reserved-me',
+            'reserved-other',
+            'reserved',
+            'taken',
+            'taken-me',
+            'taken-other',
+            'house',
+            'current-winner',
+            'winner',
+            'flash'
+        );
         cell.textContent = '';
         const isReservedByMe = square.status === 'RESERVED' && square.reservedBySessionId === sessionId;
         if (square.status === 'EMPTY') {
@@ -249,9 +266,10 @@
                 });
             }, { once: true });
         } else if (square.status === 'RESERVED') {
+            cell.classList.add('reserved');
+            cell.textContent = 'Reserved';
             if (isReservedByMe) {
                 cell.classList.add('reserved-me');
-                cell.textContent = 'Reserved';
                 cell.addEventListener('click', () => {
                     unreserve(square.idx).catch(err => {
                         elements.message.textContent = err.message;
@@ -259,22 +277,29 @@
                 }, { once: true });
             } else {
                 cell.classList.add('reserved-other');
-                // Add flash animation only for newly reserved squares by others
                 if (isNewlyReservedByOther(square)) {
                     cell.classList.add('flash');
-                    // Remove flash class after animation completes
                     setTimeout(() => {
                         cell.classList.remove('flash');
                     }, 400);
                 }
-                // X is displayed via CSS ::after pseudo-element
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            cell.textContent = square.ownerName || 'Taken';
+            if (square.ownerName && square.ownerName === username) {
+                cell.classList.add('taken-me');
+                cell.textContent = 'Mine';
+            } else {
+                cell.classList.add('taken-other');
+                cell.textContent = 'Taken';
+            }
         } else if (square.status === 'HOUSE') {
             cell.classList.add('house');
             cell.textContent = 'HOUSE';
+        }
+
+        if (square.wonQ1 || square.wonQ2 || square.wonQ3 || square.wonFinal) {
+            cell.classList.add('winner');
         }
 
         if (snapshot.currentWinnerIdx === square.idx) {
@@ -285,18 +310,20 @@
     }
 
     function addBadge(cell, square) {
-        const labels = [];
-        if (square.wonQ1) labels.push('1st');
-        if (square.wonQ2) labels.push('half');
-        if (square.wonQ3) labels.push('3rd');
-        if (square.wonFinal) labels.push('final');
-        if (labels.length === 0) {
+        const badges = [];
+        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left' });
+        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right' });
+        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left' });
+        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right' });
+        if (badges.length === 0) {
             return;
         }
-        const badge = document.createElement('div');
-        badge.className = 'badge';
-        badge.textContent = labels.join(',');
-        cell.appendChild(badge);
+        badges.forEach(entry => {
+            const badge = document.createElement('div');
+            badge.className = `badge badge-${entry.position}`;
+            badge.textContent = entry.label;
+            cell.appendChild(badge);
+        });
     }
 
     function renderChecklist() {
@@ -452,7 +479,45 @@
         }
     }
 
-    elements.confirm.addEventListener('click', purchase);
+    function openPurchaseModal() {
+        if (!elements.purchaseModal) {
+            purchase();
+            return;
+        }
+        const count = selected.size;
+        if (count === 0) {
+            elements.message.textContent = 'Select at least one square.';
+            return;
+        }
+        const total = (snapshot.priceCents * count) / 100;
+        elements.purchaseCount.textContent = count;
+        elements.purchaseTotal.textContent = total.toFixed(2);
+        elements.purchaseModal.classList.add('open');
+    }
+
+    function closePurchaseModal() {
+        if (elements.purchaseModal) {
+            elements.purchaseModal.classList.remove('open');
+        }
+    }
+
+    elements.confirm.addEventListener('click', openPurchaseModal);
+    if (elements.purchaseConfirm) {
+        elements.purchaseConfirm.addEventListener('click', () => {
+            closePurchaseModal();
+            purchase();
+        });
+    }
+    if (elements.purchaseCancel) {
+        elements.purchaseCancel.addEventListener('click', () => {
+            closePurchaseModal();
+        });
+    }
+    if (elements.purchaseBackdrop) {
+        elements.purchaseBackdrop.addEventListener('click', () => {
+            closePurchaseModal();
+        });
+    }
     elements.changeUser.addEventListener('click', () => {
         const redirect = encodeURIComponent(window.location.pathname);
         window.location.href = `/login?redirect=${redirect}`;
