@@ -34,6 +34,7 @@
         <div class="admin-panels">
             <section class="admin-panel">
                 <h2>Create Board</h2>
+                <label class="input-label" for="admin-token">Admin token</label>
                 <input type="text" id="admin-token" placeholder="Admin token" value="admin" />
                 <h2>Visibility Settings</h2>
                 <label class="toggle-row">
@@ -41,22 +42,35 @@
                     Show purchaser names to players
                 </label>
                 <button id="save-settings">Save Settings</button>
+                <label class="input-label" for="board-name">Board name</label>
                 <input type="text" id="board-name" placeholder="Board name" />
                 <label class="input-label" for="fixture-select">Fixtures</label>
                 <select id="fixture-select">
                     <option value="">Select a fixture</option>
                 </select>
+                <label class="input-label" for="sport-type">Sport type</label>
                 <input type="text" id="sport-type" placeholder="Sport type (e.g., Football)" />
+                <label class="input-label" for="game-name">Game name</label>
                 <input type="text" id="game-name" placeholder="Game name (e.g., Week 1 Matchup)" />
+                <label class="input-label" for="game-id">Game group ID</label>
                 <input type="text" id="game-id" placeholder="Game group ID (optional)" />
+                <label class="input-label" for="home-team">Home team</label>
                 <input type="text" id="home-team" placeholder="Home team" />
+                <label class="input-label" for="away-team">Away team</label>
                 <input type="text" id="away-team" placeholder="Away team" />
+                <label class="input-label" for="price-cents">Price (cents)</label>
                 <input type="number" id="price-cents" placeholder="Price (cents)" value="500" />
+                <label class="input-label" for="house-percent">House percent</label>
                 <input type="number" id="house-percent" placeholder="House percent" value="10" />
+                <label class="input-label" for="min-activate">Min squares to activate</label>
                 <input type="number" id="min-activate" placeholder="Min squares to activate" value="0" />
+                <label class="input-label" for="payout-q1">Q1 payout %</label>
                 <input type="number" id="payout-q1" placeholder="Q1 payout %" value="25" />
+                <label class="input-label" for="payout-q2">Half payout %</label>
                 <input type="number" id="payout-q2" placeholder="Half payout %" value="25" />
+                <label class="input-label" for="payout-q3">Q3 payout %</label>
                 <input type="number" id="payout-q3" placeholder="Q3 payout %" value="25" />
+                <label class="input-label" for="payout-q4">Final payout %</label>
                 <input type="number" id="payout-q4" placeholder="Final payout %" value="25" />
                 <button id="create-board">Create Board</button>
                 <button id="update-board" type="button">Update Board</button>
@@ -69,19 +83,26 @@
 
             <section class="admin-panel">
                 <h2>Board Actions</h2>
+                <label class="input-label" for="board-id">Board ID</label>
                 <input type="number" id="board-id" placeholder="Board ID" />
-                <button id="start-game">Start Game (Lock)</button>
-                <input type="number" id="home-score" placeholder="Home score" value="0" />
-                <input type="number" id="away-score" placeholder="Away score" value="0" />
-                <input type="text" id="game-clock" placeholder="Game clock (e.g., 32')" value="-" />
-                <button id="update-score">Update Score</button>
+                <label class="input-label" for="action-game-id">Game ID</label>
+                <input type="text" id="action-game-id" placeholder="Game ID" readonly />
+                <label class="input-label" for="quarter-select">Quarter payout</label>
                 <select id="quarter-select">
                     <option value="Q1">Confirm Q1 (1st)</option>
                     <option value="Q2">Confirm Q2 (half)</option>
                     <option value="Q3">Confirm Q3 (3rd)</option>
                     <option value="Q4">Confirm Q4 (final)</option>
                 </select>
-                <button id="confirm-quarter">Confirm Quarter</button>
+                <button id="start-game">Start Game (Lock)</button>
+                <label class="input-label" for="home-score">Home score</label>
+                <input type="number" id="home-score" placeholder="Home score" value="0" />
+                <label class="input-label" for="away-score">Away score</label>
+                <input type="number" id="away-score" placeholder="Away score" value="0" />
+                <label class="input-label" for="game-clock">Game clock</label>
+                <input type="text" id="game-clock" placeholder="Game clock (e.g., 32')" value="-" />
+                <button id="update-score">Update Score</button>
+                <button id="confirm-quarter">Payout</button>
                 <button id="reset-board">Reset Board</button>
                 <button id="delete-board" type="button">Delete Board</button>
             </section>

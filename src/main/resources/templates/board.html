@@ -69,11 +69,12 @@
                     <h2>10x10 Board</h2>
                     <div class="legend">
                         <span class="legend-item available">Available</span>
-                        <span class="legend-item reserved-me">Reserved (You)</span>
-                        <span class="legend-item reserved-other">Reserved (Other)</span>
+                        <span class="legend-item reserved">Reserved</span>
+                        <span class="legend-item mine">Mine</span>
                         <span class="legend-item taken">Taken</span>
                         <span class="legend-item house">House</span>
-                        <span class="legend-item current">Current Winner</span>
+                        <span class="legend-item winner">Result</span>
+                        <span class="legend-item current">Current Score</span>
                     </div>
                 </div>
                 <div id="board" th:attr="data-board-id=${boardId}"></div>
@@ -121,11 +122,25 @@
                         <li>Auto-purchase tool for random squares.</li>
                         <li>Auto-purchase across multiple boards.</li>
                         <li>Optional return-to-pool for unclaimed lock squares.</li>
+                        <li>Player win/loss history dashboard.</li>
                     </ul>
                 </div>
             </aside>
         </section>
     </main>
+</div>
+
+<div class="modal" id="purchase-modal" aria-hidden="true">
+    <div class="modal-backdrop" id="purchase-backdrop"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="purchase-title">
+        <h3 id="purchase-title">Confirm Purchase</h3>
+        <p>You have selected '<span id="purchase-count">0</span>' squares.</p>
+        <p>Total cost for $<span id="purchase-total">0.00</span></p>
+        <div class="modal-actions">
+            <button class="secondary-btn" id="purchase-cancel" type="button">Cancel</button>
+            <button id="purchase-confirm" type="button">Confirm</button>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
