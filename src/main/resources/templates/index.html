@@ -17,6 +17,7 @@
         </div>
         <nav class="nav-actions">
             <a class="nav-link" href="/login" id="login-nav">Login</a>
+            <a class="nav-link" href="/history">History</a>
             <a class="nav-link" href="/admin" id="admin-nav">Admin Console</a>
             <a class="nav-link" href="#" id="logout-nav">Logout</a>
         </nav>
@@ -89,10 +90,11 @@
         const loginNav = document.getElementById('login-nav');
         const logoutNav = document.getElementById('logout-nav');
         const username = localStorage.getItem('squares.username');
+        const displayName = username || localStorage.getItem('squares.displayName');
         const role = localStorage.getItem('squares.role');
         const adminNav = document.getElementById('admin-nav');
-        if (loginNav && username) {
-            loginNav.textContent = username;
+        if (loginNav && displayName) {
+            loginNav.textContent = displayName;
         }
         if (adminNav && role !== 'admin') {
             adminNav.remove();
@@ -104,6 +106,7 @@
                 logoutNav.addEventListener('click', event => {
                     event.preventDefault();
                     localStorage.removeItem('squares.username');
+                    localStorage.removeItem('squares.displayName');
                     localStorage.removeItem('squares.serviceTicket');
                     localStorage.removeItem('squares.role');
                     window.location.href = '/';

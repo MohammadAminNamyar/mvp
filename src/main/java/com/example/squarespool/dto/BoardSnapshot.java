@@ -38,6 +38,15 @@ public class BoardSnapshot {
     private int prizeQ2Cents;
     private int prizeQ3Cents;
     private int prizeQ4Cents;
+    private int prizePerSquareQ1Cents;
+    private int prizePerSquareQ2Cents;
+    private int prizePerSquareQ3Cents;
+    private int prizePerSquareQ4Cents;
+    private boolean prizeQ1RolledOver;
+    private boolean prizeQ2RolledOver;
+    private boolean prizeQ3RolledOver;
+    private boolean finalPrizeRefunded;
+    private int finalRefundPerPlayerCents;
     private List<SquareSnapshot> squares;
 
     public Long getBoardId() {
@@ -286,6 +295,78 @@ public class BoardSnapshot {
 
     public void setPrizeQ4Cents(int prizeQ4Cents) {
         this.prizeQ4Cents = prizeQ4Cents;
+    }
+
+    public int getPrizePerSquareQ1Cents() {
+        return prizePerSquareQ1Cents;
+    }
+
+    public void setPrizePerSquareQ1Cents(int prizePerSquareQ1Cents) {
+        this.prizePerSquareQ1Cents = prizePerSquareQ1Cents;
+    }
+
+    public int getPrizePerSquareQ2Cents() {
+        return prizePerSquareQ2Cents;
+    }
+
+    public void setPrizePerSquareQ2Cents(int prizePerSquareQ2Cents) {
+        this.prizePerSquareQ2Cents = prizePerSquareQ2Cents;
+    }
+
+    public int getPrizePerSquareQ3Cents() {
+        return prizePerSquareQ3Cents;
+    }
+
+    public void setPrizePerSquareQ3Cents(int prizePerSquareQ3Cents) {
+        this.prizePerSquareQ3Cents = prizePerSquareQ3Cents;
+    }
+
+    public int getPrizePerSquareQ4Cents() {
+        return prizePerSquareQ4Cents;
+    }
+
+    public void setPrizePerSquareQ4Cents(int prizePerSquareQ4Cents) {
+        this.prizePerSquareQ4Cents = prizePerSquareQ4Cents;
+    }
+
+    public boolean isPrizeQ1RolledOver() {
+        return prizeQ1RolledOver;
+    }
+
+    public void setPrizeQ1RolledOver(boolean prizeQ1RolledOver) {
+        this.prizeQ1RolledOver = prizeQ1RolledOver;
+    }
+
+    public boolean isPrizeQ2RolledOver() {
+        return prizeQ2RolledOver;
+    }
+
+    public void setPrizeQ2RolledOver(boolean prizeQ2RolledOver) {
+        this.prizeQ2RolledOver = prizeQ2RolledOver;
+    }
+
+    public boolean isPrizeQ3RolledOver() {
+        return prizeQ3RolledOver;
+    }
+
+    public void setPrizeQ3RolledOver(boolean prizeQ3RolledOver) {
+        this.prizeQ3RolledOver = prizeQ3RolledOver;
+    }
+
+    public boolean isFinalPrizeRefunded() {
+        return finalPrizeRefunded;
+    }
+
+    public void setFinalPrizeRefunded(boolean finalPrizeRefunded) {
+        this.finalPrizeRefunded = finalPrizeRefunded;
+    }
+
+    public int getFinalRefundPerPlayerCents() {
+        return finalRefundPerPlayerCents;
+    }
+
+    public void setFinalRefundPerPlayerCents(int finalRefundPerPlayerCents) {
+        this.finalRefundPerPlayerCents = finalRefundPerPlayerCents;
     }
 
     public List<SquareSnapshot> getSquares() {

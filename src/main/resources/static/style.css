@@ -605,34 +605,42 @@ a {
 
 .badge {
     position: absolute;
-    background: rgba(34, 211, 238, 0.95);
+    width: 50%;
+    height: 50%;
+    background: var(--badge-color, rgba(34, 211, 238, 0.95));
     color: #0b0d1a;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .badge-top-left {
-    top: 2px;
-    left: 2px;
+    top: 0;
+    left: 0;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .badge-top-right {
-    top: 2px;
-    right: 2px;
+    top: 0;
+    right: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 .badge-bottom-left {
-    bottom: 2px;
-    left: 2px;
+    bottom: 0;
+    left: 0;
+    clip-path: polygon(0 0, 0 100%, 100% 100%);
 }
 
 .badge-bottom-right {
-    bottom: 2px;
-    right: 2px;
+    bottom: 0;
+    right: 0;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
 .ticket input,
@@ -809,6 +817,7 @@ a {
     border-radius: 12px;
     background: rgba(51, 65, 85, 0.4);
     border: 1px solid rgba(71, 85, 105, 0.5);
+    gap: 12px;
 }
 
 .prize-period strong {
@@ -827,6 +836,13 @@ a {
     font-weight: 700;
     font-size: 14px;
     color: #38bdf8;
+}
+
+.prize-share {
+    font-size: 11px;
+    color: #a9b0c7;
+    text-align: right;
+    min-width: 120px;
 }
 
 .admin-panel {
@@ -860,11 +876,17 @@ a {
     color: #f4f6ff;
 }
 
-.admin-panel .input-label {
-    display: block;
+.admin-panel .admin-field {
+    display: grid;
+    gap: 6px;
     margin-top: 8px;
     font-size: 12px;
     color: #a9b0c7;
+}
+
+.admin-panel .admin-field input,
+.admin-panel .admin-field select {
+    margin-top: 0;
 }
 
 .toggle-row {
@@ -1157,4 +1179,77 @@ body {
     opacity: 0.6;
     background: rgba(30, 41, 59, 0.4);
     border-color: rgba(71, 85, 105, 0.4);
+}
+
+.history-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.history-entry {
+    display: grid;
+    gap: 16px;
+}
+
+.history-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.history-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.history-metrics div {
+    display: grid;
+    gap: 4px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(51, 65, 85, 0.35);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+}
+
+.history-metrics strong {
+    font-size: 16px;
+}
+
+.history-squares {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.history-chip {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(51, 65, 85, 0.45);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.history-chip.winner {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.6);
+    color: #bbf7d0;
+}
+
+.history-note {
+    font-size: 12px;
+    color: #fbbf24;
+}
+
+.empty-history {
+    text-align: center;
+}
+
+.positive {
+    color: #22c55e;
+}
+
+.negative {
+    color: #f87171;
 }

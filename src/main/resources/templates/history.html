@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Player History</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="theme-dark">
+<div class="app-shell">
+    <header class="top-nav">
+        <div class="brand">
+            <span class="logo">■</span>
+            <div>
+                <div class="brand-title">Squares Pool</div>
+                <div class="brand-subtitle">Player History</div>
+            </div>
+        </div>
+        <nav class="nav-actions">
+            <a class="nav-link" href="/">Back to Lobby</a>
+            <a class="nav-link" href="/history">History</a>
+            <span class="status-pill" id="history-user"></span>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero-card">
+            <div class="hero-heading">
+                <div>
+                    <h1>Win/Loss History</h1>
+                    <p class="muted">Review completed boards, your squares, and payouts.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="history-grid" id="history-grid"></section>
+    </main>
+</div>
+
+<script src="/history.js"></script>
+</body>
+</html>

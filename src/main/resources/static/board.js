@@ -3,6 +3,7 @@
     const boardId = boardContainer.getAttribute('data-board-id');
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
+    const displayNameKey = 'squares.displayName';
     const ticketKey = 'squares.serviceTicket';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
@@ -10,15 +11,18 @@
         localStorage.setItem(sessionKey, sessionId);
     }
     const username = localStorage.getItem(usernameKey);
+    let displayName = username;
+    if (!displayName) {
+        displayName = localStorage.getItem(displayNameKey);
+        if (!displayName) {
+            displayName = `Guest-${sessionId.slice(0, 6)}`;
+            localStorage.setItem(displayNameKey, displayName);
+        }
+    }
     const loginNav = document.getElementById('login-nav');
     const serviceTicket = localStorage.getItem(ticketKey);
-    if (!username) {
-        const redirect = encodeURIComponent(window.location.pathname);
-        window.location.href = `/login?redirect=${redirect}`;
-        return;
-    }
     if (loginNav) {
-        loginNav.textContent = username;
+        loginNav.textContent = displayName;
     }
 
     let snapshot = null;
@@ -92,10 +96,11 @@
     }
 
     function purchase() {
-        const customerName = username.trim();
+        let customerName = displayName.trim();
         if (!customerName) {
-            elements.message.textContent = 'Enter a display name.';
-            return;
+            displayName = `Guest-${sessionId.slice(0, 6)}`;
+            localStorage.setItem(displayNameKey, displayName);
+            customerName = displayName;
         }
         const indices = Array.from(selected);
         if (indices.length === 0) {
@@ -134,7 +139,7 @@
         if (!snapshot) {
             return;
         }
-        elements.customerName.textContent = username;
+        elements.customerName.textContent = displayName;
         elements.name.textContent = snapshot.name;
         elements.status.textContent = snapshot.status;
         elements.activation.textContent = snapshot.active ? 'Active' : 'Not Active';
@@ -286,7 +291,10 @@
             }
         } else if (square.status === 'TAKEN') {
             cell.classList.add('taken');
-            if (square.ownerName && square.ownerName === username) {
+            const ownedByMe = square.ownerSessionId
+                ? square.ownerSessionId === sessionId
+                : (square.ownerName && square.ownerName === displayName);
+            if (ownedByMe) {
                 cell.classList.add('taken-me');
                 cell.textContent = 'Mine';
             } else {
@@ -311,10 +319,10 @@
 
     function addBadge(cell, square) {
         const badges = [];
-        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left' });
-        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right' });
-        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left' });
-        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right' });
+        if (square.wonQ1) badges.push({ label: '1st', position: 'top-left', color: 'rgba(56, 189, 248, 0.95)' });
+        if (square.wonQ2) badges.push({ label: 'half', position: 'top-right', color: 'rgba(167, 139, 250, 0.95)' });
+        if (square.wonQ3) badges.push({ label: '3rd', position: 'bottom-left', color: 'rgba(52, 211, 153, 0.95)' });
+        if (square.wonFinal) badges.push({ label: 'full', position: 'bottom-right', color: 'rgba(251, 191, 36, 0.95)' });
         if (badges.length === 0) {
             return;
         }
@@ -322,6 +330,7 @@
             const badge = document.createElement('div');
             badge.className = `badge badge-${entry.position}`;
             badge.textContent = entry.label;
+            badge.style.setProperty('--badge-color', entry.color);
             cell.appendChild(badge);
         });
     }
@@ -338,7 +347,7 @@
 
     function renderHistory() {
         const takenSquares = snapshot.squares
-            .filter(square => square.status === 'TAKEN' && square.ownerName === username)
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId)
             .sort((a, b) => a.idx - b.idx)
             .slice(0, 12);
 
@@ -352,8 +361,7 @@
 
         takenSquares.forEach(square => {
             const entry = document.createElement('li');
-            const label = square.ownerName ? square.ownerName : 'Taken';
-            entry.textContent = `#${square.idx} • ${label} (Buyer)`;
+            entry.textContent = `#${square.idx} • Mine`;
             elements.historyList.appendChild(entry);
         });
     }
@@ -362,11 +370,44 @@
         if (!elements.prizeGrid) {
             return;
         }
+        const ownedCount = snapshot.squares
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
+<<<<<<< HEAD
             { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
             { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
             { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
             { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+=======
+            {
+                label: '1ST',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ1Cents,
+                perSquare: snapshot.prizePerSquareQ1Cents,
+                rolled: snapshot.prizeQ1RolledOver
+            },
+            {
+                label: '1ST',
+                period: 'HALF',
+                cents: snapshot.prizeQ2Cents,
+                perSquare: snapshot.prizePerSquareQ2Cents,
+                rolled: snapshot.prizeQ2RolledOver
+            },
+            {
+                label: '3RD',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ3Cents,
+                perSquare: snapshot.prizePerSquareQ3Cents,
+                rolled: snapshot.prizeQ3RolledOver
+            },
+            {
+                label: 'FULL',
+                period: 'GAME',
+                cents: snapshot.prizeQ4Cents,
+                perSquare: snapshot.prizePerSquareQ4Cents,
+                rolled: false
+            }
+>>>>>>> origin/dev
         ];
         const adjusted = applyRollover(prizes);
         elements.prizeGrid.innerHTML = '';
@@ -387,9 +428,25 @@
             period.appendChild(sub);
             const amount = document.createElement('div');
             amount.className = 'prize-amount';
+<<<<<<< HEAD
             amount.textContent = display.vacant ? 'VACANT' : formatMoney(display.cents);
+=======
+            if (prize.rolled) {
+                amount.textContent = 'Rolled';
+            } else {
+                amount.textContent = formatMoney(prize.cents);
+            }
+>>>>>>> origin/dev
             card.appendChild(period);
             card.appendChild(amount);
+            const share = document.createElement('div');
+            share.className = 'prize-share';
+            if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
+                share.textContent = `Refund per player: ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
+            } else if (!prize.rolled) {
+                share.textContent = `Your share: ${formatMoney(prize.perSquare * ownedCount)}`;
+            }
+            card.appendChild(share);
             elements.prizeGrid.appendChild(card);
         });
     }
@@ -408,11 +465,44 @@
         setLogo(elements.scoreboardAwayLogo, snapshot.awayTeam);
         setLogo(elements.scoreboardHomeLogo, snapshot.homeTeam);
         triggerScoreCelebration();
+        const ownedCount = snapshot.squares
+            .filter(square => square.status === 'TAKEN' && square.ownerSessionId === sessionId).length;
         const prizes = [
+<<<<<<< HEAD
             { key: 'Q1', label: '1ST', period: 'QUARTER', cents: snapshot.prizeQ1Cents },
             { key: 'Q2', label: '1ST', period: 'HALF', cents: snapshot.prizeQ2Cents },
             { key: 'Q3', label: '3RD', period: 'QUARTER', cents: snapshot.prizeQ3Cents },
             { key: 'Q4', label: 'FULL', period: 'GAME', cents: snapshot.prizeQ4Cents }
+=======
+            {
+                label: '1ST',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ1Cents,
+                perSquare: snapshot.prizePerSquareQ1Cents,
+                rolled: snapshot.prizeQ1RolledOver
+            },
+            {
+                label: '1ST',
+                period: 'HALF',
+                cents: snapshot.prizeQ2Cents,
+                perSquare: snapshot.prizePerSquareQ2Cents,
+                rolled: snapshot.prizeQ2RolledOver
+            },
+            {
+                label: '3RD',
+                period: 'QUARTER',
+                cents: snapshot.prizeQ3Cents,
+                perSquare: snapshot.prizePerSquareQ3Cents,
+                rolled: snapshot.prizeQ3RolledOver
+            },
+            {
+                label: 'FULL',
+                period: 'GAME',
+                cents: snapshot.prizeQ4Cents,
+                perSquare: snapshot.prizePerSquareQ4Cents,
+                rolled: false
+            }
+>>>>>>> origin/dev
         ];
         const adjusted = applyRollover(prizes);
         elements.scoreboardPrizes.innerHTML = '';
@@ -420,11 +510,22 @@
             const display = adjusted[prize.key];
             const item = document.createElement('div');
             item.className = 'scoreboard-prize';
+<<<<<<< HEAD
             if (snapshot.currentQuarter === prize.key) {
                 item.classList.add('is-current');
             }
             const displayText = display.vacant ? 'VACANT' : formatMoney(display.cents);
             item.textContent = `${prize.label} ${prize.period} ${displayText}`;
+=======
+            if (prize.rolled) {
+                item.textContent = `${prize.label} ${prize.period} Rolled`;
+            } else if (snapshot.finalPrizeRefunded && prize.period === 'GAME') {
+                item.textContent = `${prize.label} ${prize.period} Refund ${formatMoney(snapshot.finalRefundPerPlayerCents)}`;
+            } else {
+                const share = formatMoney(prize.perSquare * ownedCount);
+                item.textContent = `${prize.label} ${prize.period} ${formatMoney(prize.cents)} • Yours ${share}`;
+            }
+>>>>>>> origin/dev
             elements.scoreboardPrizes.appendChild(item);
         });
     }

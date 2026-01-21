@@ -10,6 +10,7 @@ public class SquareSnapshot {
     private int colIndex;
     private SquareStatus status;
     private String ownerName;
+    private String ownerSessionId;
     private String reservedBySessionId;
     private Instant reservedUntil;
     private boolean wonQ1;
@@ -55,6 +56,14 @@ public class SquareSnapshot {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerSessionId() {
+        return ownerSessionId;
+    }
+
+    public void setOwnerSessionId(String ownerSessionId) {
+        this.ownerSessionId = ownerSessionId;
     }
 
     public String getReservedBySessionId() {

@@ -176,7 +176,8 @@
                 }
             })
             .catch(() => {
-                sportList.innerHTML = '<p class="muted">Unable to load lobby data.</p>';
+                renderSports([]);
+                renderEmptyGamesMessage();
             });
     }
 

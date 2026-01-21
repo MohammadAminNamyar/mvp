@@ -8,7 +8,6 @@ import java.util.List;
 public class PurchaseRequest {
     @NotBlank
     private String sessionId;
-    @NotBlank
     private String customerName;
     @NotEmpty
     private List<Integer> indices;
