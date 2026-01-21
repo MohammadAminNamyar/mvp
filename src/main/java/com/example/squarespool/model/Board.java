@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class Board {
     private Instant createdAt = Instant.now();
 
     @OneToMany(mappedBy = "board", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Square> squares = new ArrayList<>();
 
     public Long getId() {

@@ -381,8 +381,15 @@ public class BoardService {
         return sports.stream().map(SportOptionResponse::new).toList();
     }
 
-    public List<BetOptionResponse> listBetOptions() {
+    public List<BetOptionResponse> listBetOptions(String sportType, String gameName) {
+        String normalizedSport = sportType == null ? null : normalizeSport(sportType);
+        String normalizedGame = gameName == null ? null : normalizeGameName(gameName, null, null);
         return boardRepository.findAll().stream()
+                .filter(board -> normalizedSport == null
+                        || normalizeSport(board.getSportType()).equalsIgnoreCase(normalizedSport))
+                .filter(board -> normalizedGame == null
+                        || normalizeGameName(board.getGameName(), board.getHomeTeam(), board.getAwayTeam())
+                        .equalsIgnoreCase(normalizedGame))
                 .map(Board::getPriceCents)
                 .distinct()
                 .sorted()

@@ -27,8 +27,9 @@ public class LobbyController {
     }
 
     @GetMapping("/bets")
-    public List<BetOptionResponse> bets() {
-        return boardService.listBetOptions();
+    public List<BetOptionResponse> bets(@RequestParam(required = false) String sport,
+                                        @RequestParam(required = false) String game) {
+        return boardService.listBetOptions(sport, game);
     }
 
     @GetMapping("/games")

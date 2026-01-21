@@ -10,7 +10,6 @@
 
     const state = {
         sports: [],
-        bets: [],
         selectedSport: null,
         selectedBets: new Map()
     };
@@ -93,19 +92,6 @@
 
             const betList = document.createElement('div');
             betList.className = 'chip-list';
-            state.bets.forEach(bet => {
-                const betButton = document.createElement('button');
-                betButton.type = 'button';
-                betButton.className = 'chip';
-                betButton.textContent = formatCurrency(bet.amountCents);
-                betButton.dataset.amountCents = String(bet.amountCents);
-                betButton.addEventListener('click', () => {
-                    state.selectedBets.set(game.name, bet.amountCents);
-                    highlightSelectedBet(betList, bet.amountCents);
-                    loadBoards(game.name, bet.amountCents, boardList);
-                });
-                betList.appendChild(betButton);
-            });
             betRow.appendChild(betList);
 
             const boardList = document.createElement('div');
@@ -116,7 +102,54 @@
             card.appendChild(boardList);
 
             gamesList.appendChild(card);
+
+            loadBetOptions(game, betList, boardList);
         });
+    }
+
+    function loadBetOptions(game, betList, boardList) {
+        if (!state.selectedSport) {
+            return;
+        }
+        clearChildren(betList);
+        const params = new URLSearchParams({
+            sport: state.selectedSport,
+            game: game.name
+        });
+        fetchJson(`/api/lobby/bets?${params.toString()}`)
+            .then(bets => {
+                if (bets.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'muted small';
+                    empty.textContent = 'No bet amounts yet.';
+                    betList.appendChild(empty);
+                    state.selectedBets.delete(game.name);
+                    return;
+                }
+                bets.forEach(bet => {
+                    const betButton = document.createElement('button');
+                    betButton.type = 'button';
+                    betButton.className = 'chip';
+                    betButton.textContent = formatCurrency(bet.amountCents);
+                    betButton.dataset.amountCents = String(bet.amountCents);
+                    betButton.addEventListener('click', () => {
+                        state.selectedBets.set(game.name, bet.amountCents);
+                        highlightSelectedBet(betList, bet.amountCents);
+                        loadBoards(game.name, bet.amountCents, boardList);
+                    });
+                    betList.appendChild(betButton);
+                });
+                const selectedBet = state.selectedBets.get(game.name);
+                if (selectedBet && bets.some(bet => bet.amountCents === selectedBet)) {
+                    highlightSelectedBet(betList, selectedBet);
+                    loadBoards(game.name, selectedBet, boardList);
+                } else {
+                    state.selectedBets.delete(game.name);
+                }
+            })
+            .catch(() => {
+                betList.innerHTML = '<div class="muted small">Unable to load bet amounts.</div>';
+            });
     }
 
     function highlightSelectedBet(betList, amountCents) {
@@ -201,10 +234,9 @@
     }
 
     function loadInitialData() {
-        Promise.all([fetchJson('/api/lobby/sports'), fetchJson('/api/lobby/bets')])
-            .then(([sports, bets]) => {
+        fetchJson('/api/lobby/sports')
+            .then(sports => {
                 state.sports = sports;
-                state.bets = bets;
                 state.selectedSport = sports[0]?.name || null;
                 renderSports();
                 loadGames();
