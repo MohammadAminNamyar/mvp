@@ -15,11 +15,14 @@
                 <div class="brand-subtitle">Live MVP Board</div>
             </div>
         </div>
-        <nav class="nav-actions">
+        <button class="hamburger-menu" id="hamburger-menu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="nav-actions" id="nav-actions">
             <a class="nav-link" href="/">Back to Lobby</a>
             <a class="nav-link" href="/history">History</a>
-            <span class="status-pill" id="login-nav"></span>
-            <span class="status-pill glow" id="board-status">OPEN</span>
             <span class="status-pill">Viewers: <span id="viewer-count">0</span></span>
         </nav>
     </header>
@@ -50,16 +53,6 @@
 
         <section class="content-grid">
             <div class="board-panel card">
-                <div class="panel-header">
-                    <div class="legend">
-                        <span class="legend-item available">Available</span>
-                        <span class="legend-item reserved">Reserved</span>
-                        <span class="legend-item mine">Mine</span>
-                        <span class="legend-item taken">Taken</span>
-                        <span class="legend-item winner">Result</span>
-                        <span class="legend-item current">Current Score</span>
-                    </div>
-                </div>
                 <div id="board" th:attr="data-board-id=${boardId}"></div>
             </div>
 
@@ -98,5 +91,38 @@
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script src="/board.js?v=20260121-3"></script>
+<script>
+    (function () {
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const navActions = document.getElementById('nav-actions');
+
+        // Hamburger menu toggle
+        if (hamburgerMenu && navActions) {
+            hamburgerMenu.addEventListener('click', () => {
+                const isActive = hamburgerMenu.classList.toggle('active');
+                navActions.classList.toggle('active');
+                document.body.classList.toggle('nav-open', isActive);
+            });
+
+            // Close menu when clicking on a nav link
+            navActions.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                });
+            });
+
+            // Close menu when clicking outside (on the overlay background)
+            navActions.addEventListener('click', (e) => {
+                if (e.target === navActions) {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                }
+            });
+        }
+    })();
+</script>
 </body>
 </html>
