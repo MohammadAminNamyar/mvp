@@ -288,23 +288,38 @@
             message.textContent = 'Enter a board ID to update.';
             return;
         }
+        const currentBoard = boardsById.get(String(boardId)) || {};
+        const pickText = (input, fallback) => (input.value || '').trim() || fallback || '';
+        const name = pickText(boardNameInput, currentBoard.name);
+        const sportType = pickText(sportTypeInput, currentBoard.sportType);
+        const gameName = pickText(gameNameInput, currentBoard.gameName);
+        const homeTeam = pickText(homeTeamInput, currentBoard.homeTeam);
+        const awayTeam = pickText(awayTeamInput, currentBoard.awayTeam);
+        if (!name || !sportType || !gameName || !homeTeam || !awayTeam) {
+            message.textContent = 'Name, sport type, game name, and teams are required.';
+            return;
+        }
+        const toNumber = (input, fallback) => {
+            const value = Number(input.value);
+            return Number.isFinite(value) ? value : fallback;
+        };
         fetch(`/admin/boards/${boardId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', ...tokenHeader() },
             body: JSON.stringify({
-                name: boardNameInput.value,
-                sportType: sportTypeInput.value,
-                gameName: gameNameInput.value,
+                name,
+                sportType,
+                gameName,
                 gameId: gameIdInput.value,
-                homeTeam: homeTeamInput.value,
-                awayTeam: awayTeamInput.value,
-                priceCents: Number(priceCentsInput.value),
-                housePercent: Number(housePercentInput.value),
-                minSquaresToActivate: Number(minActivateInput.value),
-                payoutQ1Percent: Number(payoutQ1Input.value),
-                payoutQ2Percent: Number(payoutQ2Input.value),
-                payoutQ3Percent: Number(payoutQ3Input.value),
-                payoutQ4Percent: Number(payoutQ4Input.value)
+                homeTeam,
+                awayTeam,
+                priceCents: toNumber(priceCentsInput, currentBoard.priceCents),
+                housePercent: toNumber(housePercentInput, currentBoard.housePercent),
+                minSquaresToActivate: toNumber(minActivateInput, currentBoard.minSquaresToActivate),
+                payoutQ1Percent: toNumber(payoutQ1Input, currentBoard.payoutQ1Percent),
+                payoutQ2Percent: toNumber(payoutQ2Input, currentBoard.payoutQ2Percent),
+                payoutQ3Percent: toNumber(payoutQ3Input, currentBoard.payoutQ3Percent),
+                payoutQ4Percent: toNumber(payoutQ4Input, currentBoard.payoutQ4Percent)
             })
         })
             .then(handleResponse)

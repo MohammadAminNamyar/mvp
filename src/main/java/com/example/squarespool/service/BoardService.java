@@ -363,7 +363,7 @@ public class BoardService {
     public void startGame(Long boardId) {
         Board board = loadBoard(boardId);
         long purchasedCount = squareRepository.countByBoardIdAndStatus(boardId, SquareStatus.TAKEN);
-        int required = Math.max(board.getMinSquaresToActivate(), 35);
+        int required = board.getMinSquaresToActivate();
         if (purchasedCount < required) {
             refundAllBuyIns(board, (int) purchasedCount);
             resetBoard(boardId);
