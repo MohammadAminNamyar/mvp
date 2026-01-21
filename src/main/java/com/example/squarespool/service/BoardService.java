@@ -241,6 +241,7 @@ public class BoardService {
 
   @Transactional
   public void deleteBoard(Long boardId) {
+    payoutEventRepository.deleteByBoardId(boardId);
     squareRepository.deleteByBoardId(boardId);
     boardRepository.deleteById(boardId);
   }
