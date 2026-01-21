@@ -15,7 +15,12 @@
                 <div class="brand-subtitle">Admin Console</div>
             </div>
         </div>
-        <nav class="nav-actions">
+        <button class="hamburger-menu" id="hamburger-menu" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="nav-actions" id="nav-actions">
             <a class="nav-link" href="/">Back to Lobby</a>
             <a class="nav-link" href="#" id="logout-nav">Logout</a>
         </nav>
@@ -158,16 +163,45 @@
 <script>
     (function () {
         const logoutNav = document.getElementById('logout-nav');
-        if (!logoutNav) {
-            return;
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const navActions = document.getElementById('nav-actions');
+
+        if (logoutNav) {
+            logoutNav.addEventListener('click', event => {
+                event.preventDefault();
+                localStorage.removeItem('squares.username');
+                localStorage.removeItem('squares.serviceTicket');
+                localStorage.removeItem('squares.role');
+                window.location.href = '/';
+            });
         }
-        logoutNav.addEventListener('click', event => {
-            event.preventDefault();
-            localStorage.removeItem('squares.username');
-            localStorage.removeItem('squares.serviceTicket');
-            localStorage.removeItem('squares.role');
-            window.location.href = '/';
-        });
+
+        // Hamburger menu toggle
+        if (hamburgerMenu && navActions) {
+            hamburgerMenu.addEventListener('click', () => {
+                const isActive = hamburgerMenu.classList.toggle('active');
+                navActions.classList.toggle('active');
+                document.body.classList.toggle('nav-open', isActive);
+            });
+
+            // Close menu when clicking on a nav link
+            navActions.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                });
+            });
+
+            // Close menu when clicking outside (on the overlay background)
+            navActions.addEventListener('click', (e) => {
+                if (e.target === navActions) {
+                    hamburgerMenu.classList.remove('active');
+                    navActions.classList.remove('active');
+                    document.body.classList.remove('nav-open');
+                }
+            });
+        }
     })();
 </script>
 </body>
