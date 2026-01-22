@@ -4,6 +4,7 @@
     const sessionKey = 'squares.sessionId';
     const usernameKey = 'squares.username';
     const ticketKey = 'squares.serviceTicket';
+    const authHeaderName = 'X-User-Id';
     let sessionId = localStorage.getItem(sessionKey);
     if (!sessionId) {
         sessionId = crypto.randomUUID();
@@ -24,6 +25,14 @@
         if (element) {
             element.textContent = value;
         }
+    }
+
+    function authHeader() {
+        const storedUsername = localStorage.getItem(usernameKey);
+        if (!storedUsername) {
+            return {};
+        }
+        return { [authHeaderName]: storedUsername };
     }
 
     const elements = {
@@ -65,7 +74,8 @@
     };
 
     function fetchSnapshot() {
-        return fetch(`/boards/${boardId}`)
+        return fetch(`/boards/${boardId}`, { headers: authHeader() })
+            .then(handleResponse)
             .then(response => response.json())
             .then(data => {
                 previousSnapshot = snapshot;
@@ -77,7 +87,7 @@
     function reserve(idx) {
         return fetch(`/boards/${boardId}/reserve/${idx}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeader() },
             body: JSON.stringify({ sessionId })
         }).then(handleResponse);
     }
@@ -85,7 +95,7 @@
     function unreserve(idx) {
         return fetch(`/boards/${boardId}/unreserve/${idx}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeader() },
             body: JSON.stringify({ sessionId })
         }).then(handleResponse);
     }
@@ -110,6 +120,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...authHeader(),
                 ...(serviceTicket ? { 'X-Service-Ticket': serviceTicket } : {})
             },
             body: JSON.stringify({ sessionId, customerName, indices })
