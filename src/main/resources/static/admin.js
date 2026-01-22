@@ -2,6 +2,7 @@
     const usernameKey = 'squares.username';
     const adminUsernameKey = 'squares.adminUsername';
     const roleKey = 'squares.role';
+    const authHeaderName = 'X-User-Id';
     const username = localStorage.getItem(usernameKey);
     const adminUsername = localStorage.getItem(adminUsernameKey);
     const role = localStorage.getItem(roleKey);
@@ -61,8 +62,16 @@
         payoutQ4Input.value = 50;
     }
 
+    function authHeader() {
+        const authenticatedUser = adminUsername || username;
+        if (!authenticatedUser) {
+            return {};
+        }
+        return { [authHeaderName]: authenticatedUser };
+    }
+
     function tokenHeader() {
-        return { 'X-Admin-Token': adminTokenInput.value.trim() };
+        return { 'X-Admin-Token': adminTokenInput.value.trim(), ...authHeader() };
     }
 
     function handleResponse(response) {
